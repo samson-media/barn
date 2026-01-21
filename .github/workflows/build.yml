@@ -86,10 +86,11 @@ jobs:
 
       - name: Build native image (Windows)
         if: runner.os == 'Windows'
-        shell: cmd
+        shell: pwsh
         run: |
-          mvn package -Pnative -DskipTests -Dspotbugs.skip=true -Dpmd.skip=true -Dcheckstyle.skip=true
-          move target\barn.exe target\${{ matrix.artifact }}.exe
+          mvn package -Pnative -DskipTests "-Dspotbugs.skip=true" "-Dpmd.skip=true" "-Dcheckstyle.skip=true"
+          Move-Item -Path "target\barn.exe" -Destination "target\${{ matrix.artifact }}.exe" -Force
+          Get-ChildItem target\*.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
