@@ -39,7 +39,7 @@
         <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
         <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
         <checkstyle.version>10.21.1</checkstyle.version>
-        <spotbugs-plugin.version>4.8.6.6</spotbugs-plugin.version>
+        <spotbugs-plugin.version>4.9.1.0</spotbugs-plugin.version>
         <pmd-plugin.version>3.26.0</pmd-plugin.version>
         <jacoco-plugin.version>0.8.12</jacoco-plugin.version>
         <native-maven-plugin.version>0.10.4</native-maven-plugin.version>
@@ -124,19 +124,12 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <release>21</release>
                     <compilerArgs>
                         <arg>-Xlint:all</arg>
+                        <arg>-Xlint:-processing</arg>
                         <arg>-Werror</arg>
                     </compilerArgs>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>info.picocli</groupId>
-                            <artifactId>picocli-codegen</artifactId>
-                            <version>${picocli.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
 
@@ -233,6 +226,7 @@
                 <configuration>
                     <configLocation>config/checkstyle/checkstyle.xml</configLocation>
                     <suppressionsLocation>config/checkstyle/suppressions.xml</suppressionsLocation>
+                    <propertyExpansion>config_loc=${project.basedir}/config/checkstyle</propertyExpansion>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <violationSeverity>warning</violationSeverity>
