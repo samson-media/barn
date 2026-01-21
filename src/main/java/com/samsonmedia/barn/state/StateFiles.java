@@ -232,8 +232,12 @@ public final class StateFiles {
     }
 
     private void writeTimestamp(String filename, Instant timestamp) throws IOException {
-        Objects.requireNonNull(timestamp, "timestamp must not be null");
-        AtomicFiles.writeAtomically(jobDir.resolve(filename), timestamp.toString());
+        Path file = jobDir.resolve(filename);
+        if (timestamp == null) {
+            AtomicFiles.deleteIfExists(file);
+        } else {
+            AtomicFiles.writeAtomically(file, timestamp.toString());
+        }
     }
 
     private Optional<Instant> readTimestamp(String filename) throws IOException {
