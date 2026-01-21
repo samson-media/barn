@@ -40,6 +40,57 @@ This project treats FFmpeg jobs as **first-class managed units of work**, not sh
 
 ---
 
+## Installation
+
+### macOS
+
+**Homebrew (recommended):**
+```bash
+brew install samson-media/tap/barn
+```
+
+**Manual download:**
+```bash
+curl -L -o barn https://github.com/samson-media/barn/releases/latest/download/barn-macos-arm64
+chmod +x barn
+sudo mv barn /usr/local/bin/
+```
+
+### Linux
+
+**Download the binary:**
+```bash
+# For x64
+curl -L -o barn https://github.com/samson-media/barn/releases/latest/download/barn-linux-x64
+
+# For ARM64
+curl -L -o barn https://github.com/samson-media/barn/releases/latest/download/barn-linux-arm64
+
+chmod +x barn
+sudo mv barn /usr/local/bin/
+```
+
+### Windows
+
+**Download the binary:**
+
+1. Download `barn-windows-x64.exe` from the [latest release](https://github.com/samson-media/barn/releases/latest)
+2. Rename to `barn.exe` and move to a directory in your PATH
+
+**PowerShell:**
+```powershell
+Invoke-WebRequest -Uri "https://github.com/samson-media/barn/releases/latest/download/barn-windows-x64.exe" -OutFile "barn.exe"
+Move-Item barn.exe C:\Windows\System32\
+```
+
+### Verify Installation
+
+```bash
+barn --version
+```
+
+---
+
 ## Barn command
 
 This project creates a simple CLI commandlet with sub-comands.
