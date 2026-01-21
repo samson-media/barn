@@ -130,6 +130,7 @@ Developers can use the --offline command line option to test how the service beh
 - [Barn Temporary Directory Layout](docs/jobs.md) describes how barn tracks jobs and storage
 - [Barn Configuration](docs/config.md) describes configuration options, retry behavior, and cleanup policies
 - [Development Guide](docs/development.md) covers local development setup and building from source
+- [Coding Standards](docs/coding-standards.md) defines code style, conventions, and quality enforcement
 - [Releasing](docs/releasing.md) describes version management and the release process
 - [CI/CD](docs/ci-cd.md) documents the GitHub Actions workflows for building and releasing
 - [Distribution](docs/distribution.md) covers package manager setup (WinGet, apt, AUR, Homebrew)

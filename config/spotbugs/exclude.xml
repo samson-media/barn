@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+    xmlns="https://github.com/spotbugs/filter/3.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- Exclude test classes from certain checks -->
+    <Match>
+        <Source name="~.*Test\.java"/>
+        <Or>
+            <Bug pattern="DM_DEFAULT_ENCODING"/>
+            <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"/>
+        </Or>
+    </Match>
+
+    <!-- Exclude generated code -->
+    <Match>
+        <Source name="~.*[\\/]generated[\\/].*"/>
+    </Match>
+
+    <!-- Allow System.exit in Main class -->
+    <Match>
+        <Class name="com.samsonmedia.barn.Main"/>
+        <Bug pattern="DM_EXIT"/>
+    </Match>
+
+    <!-- Allow command execution in specific classes -->
+    <Match>
+        <Or>
+            <Class name="~.*ProcessExecutor.*"/>
+            <Class name="~.*CommandRunner.*"/>
+        </Or>
+        <Bug pattern="COMMAND_INJECTION"/>
+    </Match>
+
+    <!-- Exclude false positives for try-with-resources -->
+    <Match>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+    </Match>
+
+    <!-- Allow serialization without serialVersionUID for internal classes -->
+    <Match>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+        <Not>
+            <Class name="~.*Exception"/>
+        </Not>
+    </Match>
+
+</FindBugsFilter>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <!-- Suppress Javadoc requirements for test classes -->
+    <suppress checks="MissingJavadocType" files=".*Test\.java$"/>
+    <suppress checks="MissingJavadocMethod" files=".*Test\.java$"/>
+    <suppress checks="JavadocMethod" files=".*Test\.java$"/>
+    <suppress checks="JavadocType" files=".*Test\.java$"/>
+
+    <!-- Suppress magic number checks in tests -->
+    <suppress checks="MagicNumber" files=".*Test\.java$"/>
+
+    <!-- Allow longer lines in test files -->
+    <suppress checks="LineLength" files=".*Test\.java$"/>
+
+    <!-- Suppress for generated code -->
+    <suppress checks=".*" files=".*[\\/]generated[\\/].*"/>
+</suppressions>

@@ -1,0 +1,160 @@
+<?xml version="1.0"?>
+<ruleset name="Barn PMD Ruleset"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        PMD ruleset for Barn project.
+        Based on PMD best practices with adjustments for modern Java.
+    </description>
+
+    <!-- ================================================================== -->
+    <!-- BEST PRACTICES                                                     -->
+    <!-- ================================================================== -->
+
+    <rule ref="category/java/bestpractices.xml">
+        <!-- Allow JUnit 5 assertions -->
+        <exclude name="JUnitTestContainsTooManyAsserts"/>
+        <exclude name="JUnitAssertionsShouldIncludeMessage"/>
+        <!-- We use Mockito, not JUnit 4 -->
+        <exclude name="JUnit4TestShouldUseTestAnnotation"/>
+        <exclude name="JUnit4TestShouldUseBeforeAnnotation"/>
+        <exclude name="JUnit4TestShouldUseAfterAnnotation"/>
+    </rule>
+
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod">
+        <properties>
+            <property name="ignoredAnnotations" value="jakarta.annotation.PostConstruct|javax.annotation.PostConstruct"/>
+        </properties>
+    </rule>
+
+    <!-- ================================================================== -->
+    <!-- CODE STYLE                                                         -->
+    <!-- ================================================================== -->
+
+    <rule ref="category/java/codestyle.xml">
+        <!-- We prefer explicit imports -->
+        <exclude name="OnlyOneReturn"/>
+        <!-- Allow short variable names like 'id', 'in', 'out' -->
+        <exclude name="ShortVariable"/>
+        <!-- Allow longer method names for clarity -->
+        <exclude name="LongVariable"/>
+        <!-- Allow static imports for test utilities -->
+        <exclude name="TooManyStaticImports"/>
+        <!-- We have our own formatting rules -->
+        <exclude name="AtLeastOneConstructor"/>
+        <!-- Allow default package for CLI commands -->
+        <exclude name="CommentDefaultAccessModifier"/>
+        <!-- Java 21+ has useful implicit classes -->
+        <exclude name="UnnecessaryFullyQualifiedName"/>
+    </rule>
+
+    <rule ref="category/java/codestyle.xml/ClassNamingConventions">
+        <properties>
+            <property name="utilityClassPattern" value="[A-Z][a-zA-Z0-9]+(Utils?|Helper|Constants)"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/codestyle.xml/MethodNamingConventions">
+        <properties>
+            <property name="methodPattern" value="[a-z][a-zA-Z0-9]*"/>
+            <property name="nativePattern" value="[a-z][a-zA-Z0-9]*"/>
+        </properties>
+    </rule>
+
+    <!-- ================================================================== -->
+    <!-- DESIGN                                                             -->
+    <!-- ================================================================== -->
+
+    <rule ref="category/java/design.xml">
+        <!-- Modern Java allows reasonable complexity -->
+        <exclude name="LawOfDemeter"/>
+        <!-- Allow data classes with many fields -->
+        <exclude name="TooManyFields"/>
+        <!-- Exclude for builders and configs -->
+        <exclude name="ExcessivePublicCount"/>
+        <!-- Allow reasonable method size -->
+        <exclude name="ExcessiveMethodLength"/>
+        <!-- Allow reasonable class size -->
+        <exclude name="ExcessiveClassLength"/>
+        <!-- Too strict for modern patterns -->
+        <exclude name="AvoidCatchingGenericException"/>
+    </rule>
+
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <property name="classReportLevel" value="80"/>
+            <property name="methodReportLevel" value="15"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/design.xml/NPathComplexity">
+        <properties>
+            <property name="reportLevel" value="200"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/design.xml/TooManyMethods">
+        <properties>
+            <property name="maxmethods" value="25"/>
+        </properties>
+    </rule>
+
+    <!-- ================================================================== -->
+    <!-- DOCUMENTATION                                                      -->
+    <!-- ================================================================== -->
+
+    <rule ref="category/java/documentation.xml">
+        <exclude name="CommentRequired"/>
+        <exclude name="CommentSize"/>
+    </rule>
+
+    <!-- ================================================================== -->
+    <!-- ERROR PRONE                                                        -->
+    <!-- ================================================================== -->
+
+    <rule ref="category/java/errorprone.xml">
+        <!-- Allow null assignments in cleanup -->
+        <exclude name="NullAssignment"/>
+        <!-- Allow close in finally for legacy code -->
+        <exclude name="CloseResource"/>
+        <!-- We validate beans differently -->
+        <exclude name="BeanMembersShouldSerialize"/>
+        <!-- Too strict -->
+        <exclude name="DataflowAnomalyAnalysis"/>
+    </rule>
+
+    <rule ref="category/java/errorprone.xml/AvoidLiteralsInIfCondition">
+        <properties>
+            <property name="ignoreMagicNumbers" value="-1,0,1,2"/>
+            <property name="ignoreExpressions" value="true"/>
+        </properties>
+    </rule>
+
+    <!-- ================================================================== -->
+    <!-- MULTITHREADING                                                     -->
+    <!-- ================================================================== -->
+
+    <rule ref="category/java/multithreading.xml">
+        <!-- We use modern concurrency utilities -->
+        <exclude name="UseConcurrentHashMap"/>
+        <exclude name="DoNotUseThreads"/>
+    </rule>
+
+    <!-- ================================================================== -->
+    <!-- PERFORMANCE                                                        -->
+    <!-- ================================================================== -->
+
+    <rule ref="category/java/performance.xml">
+        <!-- Modern JVM handles this well -->
+        <exclude name="AvoidInstantiatingObjectsInLoops"/>
+    </rule>
+
+    <!-- ================================================================== -->
+    <!-- SECURITY                                                           -->
+    <!-- ================================================================== -->
+
+    <rule ref="category/java/security.xml"/>
+
+</ruleset>
