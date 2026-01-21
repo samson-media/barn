@@ -1,8 +1,6 @@
 name: Build
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -50,51 +48,4 @@ jobs:
         with:
           name: barn-jar
           path: target/barn-*.jar
-          retention-days: 7
-
-  build-native:
-    needs: test
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact: barn-linux-x64
-          - os: ubuntu-24.04-arm
-            artifact: barn-linux-arm64
-          - os: macos-latest
-            artifact: barn-macos-arm64
-          - os: windows-latest
-            artifact: barn-windows-x64
-
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
-        with:
-          java-version: '21'
-          distribution: 'graalvm'
-          cache: 'maven'
-
-      - name: Build native image (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          mvn package -Pnative -DskipTests -Dspotbugs.skip=true -Dpmd.skip=true -Dcheckstyle.skip=true
-          mv target/barn target/${{ matrix.artifact }}
-
-      - name: Build native image (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          mvn package -Pnative -DskipTests "-Dspotbugs.skip=true" "-Dpmd.skip=true" "-Dcheckstyle.skip=true"
-          Move-Item -Path "target\barn.exe" -Destination "target\${{ matrix.artifact }}.exe" -Force
-          Get-ChildItem target\*.exe
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact }}
-          path: target/${{ matrix.artifact }}*
           retention-days: 7
