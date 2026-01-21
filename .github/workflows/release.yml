@@ -11,6 +11,7 @@ permissions:
 jobs:
   build-native:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -21,8 +22,6 @@ jobs:
             artifact: barn-macos-arm64
           - os: windows-latest
             artifact: barn-windows-x64
-          - os: windows-11-arm
-            artifact: barn-windows-arm64
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -32,7 +31,7 @@ jobs:
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '21'
-          distribution: 'graalvm-community'
+          distribution: 'graalvm'
           cache: 'maven'
 
       - name: Build native image (Unix)
