@@ -59,12 +59,14 @@ jobs:
         include:
           - os: ubuntu-latest
             artifact: barn-linux-x64
+          - os: ubuntu-24.04-arm
+            artifact: barn-linux-arm64
           - os: macos-latest
             artifact: barn-macos-arm64
-          - os: macos-15-large
-            artifact: barn-macos-x64
           - os: windows-latest
             artifact: barn-windows-x64
+          - os: windows-11-arm
+            artifact: barn-windows-arm64
 
     runs-on: ${{ matrix.os }}
     steps:
