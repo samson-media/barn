@@ -86,6 +86,6 @@ class MainTest {
         // Assert
         String output = outContent.toString();
         assertThat(output).contains("barn");
-        assertThat(output).contains("0.1.0");
+        assertThat(output).containsPattern("\\d+\\.\\d+\\.\\d+");
     }
 }

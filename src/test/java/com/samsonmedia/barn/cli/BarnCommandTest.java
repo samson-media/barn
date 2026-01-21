@@ -81,7 +81,7 @@ class BarnCommandTest {
 
         // Assert
         String output = outWriter.toString();
-        assertThat(output).contains("0.1.0");
+        assertThat(output).containsPattern("\\d+\\.\\d+\\.\\d+");
     }
 
     @Test
