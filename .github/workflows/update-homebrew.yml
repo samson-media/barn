@@ -26,7 +26,7 @@ jobs:
       - name: Checkout homebrew tap
         uses: actions/checkout@v4
         with:
-          repository: samson-media/homebrew-barn
+          repository: samson-media/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-tap
 
