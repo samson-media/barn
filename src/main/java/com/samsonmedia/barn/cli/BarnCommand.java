@@ -23,7 +23,8 @@ import picocli.CommandLine.Spec;
         KillCommand.class,
         CleanCommand.class,
         ServiceCommand.class,
-        ConfigCommand.class
+        ConfigCommand.class,
+        AutocompletionCommand.class
     }
 )
 public class BarnCommand implements Runnable {
