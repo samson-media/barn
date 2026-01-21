@@ -1,17 +1,59 @@
 # Claude AI Instructions for Barn
 
-> **First Step**: Always read `README.md` and relevant files in `docs/` before making changes.
+> **FIRST STEP - MANDATORY**: Before writing ANY code, read these files:
+> 1. `README.md` - Project overview
+> 2. `docs/coding-standards.md` - Code style and conventions
+> 3. `docs/jobs.md` - Filesystem state layout
+> 4. `docs/config.md` - Configuration options
+
+## Critical Requirements
+
+### 1. ALWAYS Write Tests First
+
+**Every code change MUST include automated tests.** No exceptions.
+
+```
+Code without tests = Incomplete work
+```
+
+Before implementing any feature or fix:
+1. Write failing tests that define the expected behavior
+2. Implement the code to make tests pass
+3. Run `mvn verify` to ensure all checks pass
+4. Only then consider the work complete
+
+### 2. ALWAYS Validate with Tests
+
+After writing code, ALWAYS run:
+
+```bash
+mvn verify
+```
+
+This runs:
+- Compilation with `-Werror` (warnings are errors)
+- Checkstyle (code formatting)
+- Unit tests
+- SpotBugs (bug detection)
+- PMD (static analysis)
+- JaCoCo (coverage check - must be 80%+)
+
+**Do NOT consider code complete until `mvn verify` passes.**
+
+### 3. ALWAYS Follow Coding Standards
+
+Read `docs/coding-standards.md` before writing code. Key rules:
+- 4 spaces indentation, 120 char line limit
+- No wildcard imports
+- Use `Optional<T>` instead of returning `null`
+- Use `Objects.requireNonNull()` for constructor params
+- Use `final` for fields that don't change
+
+---
 
 ## Project Overview
 
 Barn is a cross-platform job daemon for managing long-running media processing tasks (FFmpeg, WebDAV transfers). It runs as an OS service on Windows, macOS, and Linux.
-
-**Key documentation to read first:**
-
-1. `README.md` - Project overview and CLI commands
-2. `docs/jobs.md` - Filesystem-based job state layout
-3. `docs/config.md` - Configuration options
-4. `docs/coding-standards.md` - **CRITICAL**: Code style and conventions
 
 ## Technology Stack
 
@@ -21,10 +63,148 @@ Barn is a cross-platform job daemon for managing long-running media processing t
 - **Code Style**: Checkstyle (Google Java Style)
 - **Static Analysis**: SpotBugs, PMD
 - **Testing**: JUnit 5, Mockito, AssertJ
+- **Coverage**: JaCoCo (80% minimum)
 
-## Code Standards (Mandatory)
+---
 
-Before writing any code, read `docs/coding-standards.md`. Key points:
+## Testing Requirements (MANDATORY)
+
+### Test Coverage Requirements
+
+| Type | Minimum | Target |
+|------|---------|--------|
+| Line coverage | 80% | 90%+ |
+| Branch coverage | 70% | 80%+ |
+| New code | 100% | 100% |
+
+### Test Naming Convention
+
+```java
+// Pattern: methodName_condition_expectedResult
+@Test
+void createJob_withValidCommand_shouldReturnJobWithUniqueId() { }
+
+@Test
+void createJob_withNullCommand_shouldThrowNullPointerException() { }
+
+@Test
+void processJob_whenServiceNotRunning_shouldThrowIllegalStateException() { }
+```
+
+### Test Structure (AAA Pattern)
+
+```java
+@Test
+void findJob_withExistingId_shouldReturnJob() {
+    // Arrange
+    var manager = new JobManager(testConfig);
+    var job = manager.createJob(new Command("echo", "test"));
+
+    // Act
+    var result = manager.findJob(job.getId());
+
+    // Assert
+    assertThat(result).isPresent();
+    assertThat(result.get().getId()).isEqualTo(job.getId());
+}
+```
+
+### What to Test
+
+For EVERY class you create or modify:
+
+1. **Happy path** - Normal successful operation
+2. **Edge cases** - Empty inputs, boundary values
+3. **Error cases** - Null inputs, invalid states
+4. **Integration** - Component interactions
+
+### Test File Location
+
+```
+src/
+  main/java/com/samsonmedia/barn/
+    jobs/
+      JobManager.java
+  test/java/com/samsonmedia/barn/
+    jobs/
+      JobManagerTest.java        # Unit tests
+      JobManagerIT.java          # Integration tests
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+mvn test
+
+# Run specific test class
+mvn test -Dtest=JobManagerTest
+
+# Run with coverage report
+mvn test jacoco:report
+# View: target/site/jacoco/index.html
+
+# Run full verification (ALWAYS do this before committing)
+mvn verify
+```
+
+---
+
+## Workflow for Every Code Change
+
+### Step 1: Understand the Requirement
+- Read relevant docs
+- Understand existing code patterns
+
+### Step 2: Write Tests FIRST
+```java
+// Write test that defines expected behavior
+@Test
+void newFeature_shouldDoExpectedThing() {
+    // Arrange
+    var component = new Component();
+
+    // Act
+    var result = component.newFeature();
+
+    // Assert
+    assertThat(result).isEqualTo(expected);
+}
+```
+
+### Step 3: Run Tests (Should Fail)
+```bash
+mvn test -Dtest=ComponentTest#newFeature_shouldDoExpectedThing
+# Expected: FAILURE (test written, code not yet implemented)
+```
+
+### Step 4: Implement the Code
+Write minimal code to make the test pass.
+
+### Step 5: Run Tests (Should Pass)
+```bash
+mvn test -Dtest=ComponentTest#newFeature_shouldDoExpectedThing
+# Expected: SUCCESS
+```
+
+### Step 6: Run Full Verification
+```bash
+mvn verify
+# Must pass ALL checks:
+# - Checkstyle
+# - Compilation
+# - All tests
+# - SpotBugs
+# - PMD
+# - Coverage thresholds
+```
+
+### Step 7: Only THEN Consider Complete
+If `mvn verify` fails, fix the issues and repeat.
+
+---
+
+## Code Standards Summary
 
 ### Formatting
 - 4 spaces indentation (no tabs)
@@ -39,39 +219,59 @@ Before writing any code, read `docs/coding-standards.md`. Key points:
 - Constants: `SCREAMING_SNAKE_CASE`
 
 ### Java Idioms
-- Use `final` for fields that don't change
-- Use `Optional<T>` for return types that may be absent
-- Use `Objects.requireNonNull()` for constructor parameters
-- Use records for value objects
-- Use sealed interfaces for state machines
-- Use switch expressions (not statements)
-- Use `var` for local variables with obvious types
-
-### Error Handling
 ```java
-// Good: Use Optional for methods that may not find a result
+// Use final for immutable fields
+private final Config config;
+
+// Use Optional for nullable returns
 public Optional<Job> findJob(String id) {
     return Optional.ofNullable(jobs.get(id));
 }
 
-// Good: Validate preconditions
+// Validate constructor params
+public JobManager(Config config) {
+    this.config = Objects.requireNonNull(config, "config must not be null");
+}
+
+// Use records for value objects
+public record Job(String id, JobState state, Instant createdAt) {}
+
+// Use switch expressions
+String status = switch (state) {
+    case QUEUED -> "Waiting";
+    case RUNNING -> "Executing";
+    case FAILED -> "Failed";
+    case SUCCEEDED -> "Done";
+};
+```
+
+### Error Handling
+```java
+// Use Optional, not null
+public Optional<Job> findJob(String id);
+
+// Validate preconditions
 public void processJob(Job job) {
-    Objects.requireNonNull(job, "job must not be null");
+    Objects.requireNonNull(job, "job");
     if (job.getState() != JobState.QUEUED) {
-        throw new IllegalStateException("Job must be in QUEUED state");
+        throw new IllegalStateException("Job must be QUEUED");
+    }
+}
+
+// Create domain exceptions
+public class JobNotFoundException extends RuntimeException {
+    public JobNotFoundException(String jobId) {
+        super("Job not found: " + jobId);
     }
 }
 ```
 
-### Testing
-- Use descriptive names: `methodName_condition_expectedResult()`
-- Follow AAA pattern: Arrange, Act, Assert
-- Minimum 80% line coverage
+---
 
 ## Architecture Principles
 
 ### Filesystem as Database
-- Job state is stored in `/tmp/barn/jobs/<job-id>/`
+- Job state stored in `/tmp/barn/jobs/<job-id>/`
 - Use atomic file operations
 - Human-readable plain text files
 - No external database dependencies
@@ -79,12 +279,13 @@ public void processJob(Job job) {
 ### Cross-Platform
 - Use `System.getProperty("java.io.tmpdir")` for temp paths
 - Avoid platform-specific commands
-- Test on all three platforms (Windows, macOS, Linux)
+- Test on Windows, macOS, and Linux
 
 ### GraalVM Native Image
 - Avoid reflection where possible
 - Register any reflection in `reflect-config.json`
-- Test native image builds
+
+---
 
 ## File Structure
 
@@ -98,78 +299,82 @@ barn/
       jobs/                # Job management
       service/             # Daemon/service logic
       state/               # Filesystem state management
-    test/java/
-      unit/                # Unit tests
-      integration/         # Integration tests
-      e2e/                 # End-to-end tests
-  docs/                    # Documentation
+    test/java/com/samsonmedia/barn/
+      # Mirror structure with Test suffix
   config/
-    checkstyle/            # Checkstyle configuration
+    checkstyle/            # Checkstyle rules
     spotbugs/              # SpotBugs exclusions
     pmd/                   # PMD ruleset
-  .githooks/               # Git hooks
-  .github/workflows/       # CI/CD
+  docs/                    # Documentation
   pom.xml                  # Maven build
 ```
 
-## Common Tasks
+---
 
-### Before Committing
+## Commit Checklist
+
+Before EVERY commit:
+
+- [ ] Tests written for new/changed code
+- [ ] `mvn verify` passes
+- [ ] No `TODO` or `FIXME` without tracking issue
+- [ ] Javadoc for public API
+- [ ] Commit message follows Conventional Commits format
+
 ```bash
-mvn checkstyle:check     # Check code style
-mvn spotbugs:check       # Bug detection
-mvn pmd:check            # Static analysis
-mvn test                 # Run tests
-mvn verify               # Run all checks
-```
-
-### Commit Message Format
-Follow Conventional Commits:
-```
+# Commit message format
 feat(jobs): add retry mechanism for failed jobs
 fix(cli): handle spaces in file paths
-docs(readme): update installation instructions
+test(jobs): add integration tests for job lifecycle
 ```
 
-### Adding a New CLI Command
-1. Create command class in `src/main/java/.../cli/`
-2. Annotate with picocli `@Command`
-3. Add to main command group
-4. Add tests in `src/test/java/.../e2e/`
-5. Update `README.md` and `docs/`
-
-### Adding a Job State File
-1. Update `docs/jobs.md` with the new file
-2. Add read/write methods in `StateManager`
-3. Add tests for persistence
-4. Consider crash recovery implications
-
-## Security Considerations
-
-- Never log passwords, tokens, or credentials
-- Validate job IDs to prevent path traversal
-- Sanitize command inputs (no shell injection)
-- Use atomic writes for state files
+---
 
 ## What NOT to Do
 
-- Don't return `null` - use `Optional<T>` instead
-- Don't use raw types - always specify generics
-- Don't use wildcard imports
-- Don't skip tests for "simple" changes
-- Don't use reflection without registering for native image
-- Don't use platform-specific code without abstractions
-- Don't commit without running `mvn verify`
-- Don't catch `Exception` - catch specific exceptions
-- Don't use `System.out.println` - use SLF4J logging
+- **Don't skip tests** - Every change needs tests
+- **Don't commit without `mvn verify`** - Ensures all checks pass
+- **Don't return `null`** - Use `Optional<T>` instead
+- **Don't catch `Exception`** - Catch specific exceptions
+- **Don't use `System.out.println`** - Use SLF4J logging
+- **Don't use wildcard imports** - Import specific classes
+- **Don't use raw types** - Always specify generics
+- **Don't ignore warnings** - Fix them (they're errors with `-Werror`)
 
-## Questions to Ask
+---
 
-Before implementing a feature, consider:
+## Quick Reference
 
-1. Does this work on Windows, macOS, AND Linux?
-2. Will this survive a crash/restart?
-3. Can the state be manually inspected in the filesystem?
-4. Is this covered by tests?
-5. Does this follow the existing patterns in the codebase?
-6. Have I run `mvn verify` before committing?
+```bash
+# Build
+mvn package
+
+# Test
+mvn test
+
+# Full verification (ALWAYS before commit)
+mvn verify
+
+# Coverage report
+mvn test jacoco:report
+
+# Fast build (skip checks - use sparingly)
+mvn package -Pfast
+
+# Specific test
+mvn test -Dtest=JobManagerTest
+
+# View SpotBugs in GUI
+mvn compile spotbugs:gui
+```
+
+---
+
+## Questions to Ask Before Implementing
+
+1. Have I read the relevant documentation?
+2. Have I written tests that define the expected behavior?
+3. Does this work on Windows, macOS, AND Linux?
+4. Will this survive a crash/restart?
+5. Can the state be manually inspected in the filesystem?
+6. Does `mvn verify` pass?
