@@ -1,0 +1,202 @@
+package com.samsonmedia.barn.execution;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.samsonmedia.barn.jobs.Job;
+import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.state.BarnDirectories;
+
+/**
+ * Runs jobs by executing their commands and managing their lifecycle.
+ *
+ * <p>The JobRunner handles:
+ * <ul>
+ *   <li>Starting the process</li>
+ *   <li>Updating state to RUNNING</li>
+ *   <li>Writing PID and heartbeat</li>
+ *   <li>Monitoring the process</li>
+ *   <li>Capturing exit code and errors</li>
+ *   <li>Updating final state (SUCCEEDED/FAILED)</li>
+ * </ul>
+ */
+public class JobRunner {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JobRunner.class);
+    private static final String STDOUT_LOG = "stdout.log";
+    private static final String STDERR_LOG = "stderr.log";
+
+    private final ProcessExecutor executor;
+    private final ProcessMonitor monitor;
+    private final JobRepository repository;
+    private final BarnDirectories dirs;
+
+    /**
+     * Creates a JobRunner.
+     *
+     * @param executor the process executor
+     * @param monitor the process monitor
+     * @param repository the job repository
+     * @param dirs the directory manager
+     */
+    public JobRunner(
+            ProcessExecutor executor,
+            ProcessMonitor monitor,
+            JobRepository repository,
+            BarnDirectories dirs) {
+        this.executor = Objects.requireNonNull(executor, "executor must not be null");
+        this.monitor = Objects.requireNonNull(monitor, "monitor must not be null");
+        this.repository = Objects.requireNonNull(repository, "repository must not be null");
+        this.dirs = Objects.requireNonNull(dirs, "dirs must not be null");
+    }
+
+    /**
+     * Creates a JobRunner with default executor and monitor.
+     *
+     * @param repository the job repository
+     * @param dirs the directory manager
+     */
+    public JobRunner(JobRepository repository, BarnDirectories dirs) {
+        this(new ProcessExecutor(), new ProcessMonitor(), repository, dirs);
+    }
+
+    /**
+     * Runs a job synchronously.
+     *
+     * <p>This method blocks until the job completes.
+     *
+     * @param job the job to run
+     * @return the result of running the job
+     */
+    public JobResult run(Job job) {
+        Objects.requireNonNull(job, "job must not be null");
+
+        LOG.info("Starting job: {}", job.id());
+        Instant startTime = Instant.now();
+        AtomicBoolean completed = new AtomicBoolean(false);
+
+        try {
+            // Get paths
+            var logsDir = dirs.getJobLogsDir(job.id());
+            var workDir = dirs.getJobWorkDir(job.id());
+            var stdoutFile = logsDir.resolve(STDOUT_LOG);
+            var stderrFile = logsDir.resolve(STDERR_LOG);
+
+            // Start process
+            Process process = executor.execute(
+                job.command(),
+                workDir,
+                stdoutFile,
+                stderrFile
+            );
+
+            long pid = process.pid();
+
+            // Update state to RUNNING
+            repository.markStarted(job.id(), pid);
+
+            // Monitor the process with heartbeat updates
+            ProcessMonitor.ProcessEvent.Completed completedEvent = monitor.monitorBlocking(
+                process,
+                event -> handleEvent(job.id(), event)
+            );
+
+            completed.set(true);
+
+            // Update final state
+            int exitCode = completedEvent.exitCode();
+            String error = exitCode == 0 ? null : "Process exited with code " + exitCode;
+            repository.markCompleted(job.id(), exitCode, error);
+
+            Duration duration = Duration.between(startTime, Instant.now());
+            LOG.info("Job {} completed with exit code {} in {}", job.id(), exitCode, formatDuration(duration));
+
+            return new JobResult(exitCode, duration, error);
+
+        } catch (IOException e) {
+            LOG.error("Failed to start job {}: {}", job.id(), e.getMessage(), e);
+
+            if (!completed.get()) {
+                try {
+                    repository.markFailed(job.id(), "start_failed", e.getMessage());
+                } catch (IOException updateError) {
+                    LOG.error("Failed to mark job {} as failed: {}", job.id(), updateError.getMessage());
+                }
+            }
+
+            Duration duration = Duration.between(startTime, Instant.now());
+            return new JobResult(-1, duration, e.getMessage());
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOG.warn("Job {} was interrupted", job.id());
+
+            if (!completed.get()) {
+                try {
+                    repository.markFailed(job.id(), "interrupted", "Job was interrupted");
+                } catch (IOException updateError) {
+                    LOG.error("Failed to mark job {} as failed: {}", job.id(), updateError.getMessage());
+                }
+            }
+
+            Duration duration = Duration.between(startTime, Instant.now());
+            return new JobResult(-1, duration, "Job was interrupted");
+        }
+    }
+
+    private void handleEvent(String jobId, ProcessMonitor.ProcessEvent event) {
+        try {
+            switch (event) {
+                case ProcessMonitor.ProcessEvent.Started started -> {
+                    LOG.debug("Job {} started with PID {}", jobId, started.pid());
+                }
+                case ProcessMonitor.ProcessEvent.Heartbeat heartbeat -> {
+                    LOG.trace("Job {} heartbeat at {}", jobId, heartbeat.timestamp());
+                    repository.updateHeartbeat(jobId, heartbeat.timestamp());
+                }
+                case ProcessMonitor.ProcessEvent.Completed completed -> {
+                    LOG.debug("Job {} completed with exit code {}", jobId, completed.exitCode());
+                }
+                case ProcessMonitor.ProcessEvent.Failed failed -> {
+                    LOG.error("Job {} failed: {}", jobId, failed.error().getMessage());
+                }
+            }
+        } catch (IOException e) {
+            LOG.error("Failed to handle event for job {}: {}", jobId, e.getMessage(), e);
+        }
+    }
+
+    private String formatDuration(Duration duration) {
+        long seconds = duration.getSeconds();
+        if (seconds < 60) {
+            return seconds + "s";
+        } else if (seconds < 3600) {
+            return String.format("%dm %ds", seconds / 60, seconds % 60);
+        } else {
+            return String.format("%dh %dm %ds", seconds / 3600, (seconds % 3600) / 60, seconds % 60);
+        }
+    }
+
+    /**
+     * Result of running a job.
+     *
+     * @param exitCode the process exit code (-1 if process failed to start)
+     * @param duration the total runtime
+     * @param error the error message, if any
+     */
+    public record JobResult(int exitCode, Duration duration, String error) {
+
+        /**
+         * Returns true if the job completed successfully.
+         */
+        public boolean isSuccess() {
+            return exitCode == 0;
+        }
+    }
+}
