@@ -34,22 +34,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
-          distribution: 'graalvm-community'
-          cache: 'gradle'
+          distribution: 'temurin'
+          cache: 'maven'
 
       - name: Run tests
-        run: ./gradlew test
+        run: mvn verify -Dspotbugs.skip=true -Dpmd.skip=true
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
-          path: build/reports/tests/
+          path: target/surefire-reports/
 
   build-native:
     needs: test
@@ -57,20 +57,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            arch: x64
             artifact: barn-linux-x64
-          - os: ubuntu-24.04-arm
-            arch: arm64
-            artifact: barn-linux-arm64
           - os: macos-latest
-            arch: arm64
             artifact: barn-macos-arm64
           - os: macos-13
-            arch: x64
             artifact: barn-macos-x64
           - os: windows-latest
-            arch: x64
-            artifact: barn-windows-x64.exe
+            artifact: barn-windows-x64
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -81,16 +74,25 @@ jobs:
         with:
           java-version: '21'
           distribution: 'graalvm-community'
-          cache: 'gradle'
+          cache: 'maven'
 
-      - name: Build native image
-        run: ./gradlew nativeCompile
+      - name: Build native image (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mvn package -Pnative -DskipTests -Dspotbugs.skip=true -Dpmd.skip=true -Dcheckstyle.skip=true
+          mv target/barn target/${{ matrix.artifact }}
+
+      - name: Build native image (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mvn package -Pnative -DskipTests -Dspotbugs.skip=true -Dpmd.skip=true -Dcheckstyle.skip=true
+          mv target/barn.exe target/${{ matrix.artifact }}.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
-          path: build/native/nativeCompile/barn*
+          path: target/${{ matrix.artifact }}*
 ```
 
 ---

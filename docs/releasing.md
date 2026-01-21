@@ -30,10 +30,10 @@ For pre-release testing:
 
 ## Version Location
 
-The version is defined in `gradle.properties`:
+The version is defined in `pom.xml`:
 
-```properties
-version=1.2.3
+```xml
+<version>1.2.3</version>
 ```
 
 This version is embedded in the binary and available via `barn --version`.
@@ -102,15 +102,15 @@ Ensure all changes are merged to `main` and tests pass:
 ```bash
 git checkout main
 git pull origin main
-./gradlew clean test
+mvn clean verify
 ```
 
 ### 2. Update Version
 
-Edit `gradle.properties`:
+Edit the `<version>` tag in `pom.xml`:
 
-```properties
-version=1.2.3
+```xml
+<version>1.2.3</version>
 ```
 
 ### 3. Update Changelog
@@ -131,7 +131,7 @@ Move items from `[Unreleased]` to the new version section:
 ### 4. Commit the Release
 
 ```bash
-git add gradle.properties CHANGELOG.md
+git add pom.xml CHANGELOG.md
 git commit -m "Release v1.2.3"
 ```
 
