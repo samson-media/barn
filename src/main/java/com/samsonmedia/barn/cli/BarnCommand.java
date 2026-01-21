@@ -13,7 +13,7 @@ import picocli.CommandLine.Spec;
 @Command(
     name = "barn",
     mixinStandardHelpOptions = true,
-    version = "barn 0.1.0-SNAPSHOT",
+    version = "barn 0.1.1",
     description = "Cross-platform job daemon for media processing",
     subcommands = {
         RunCommand.class,

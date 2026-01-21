@@ -6,7 +6,7 @@
 
     <groupId>com.samsonmedia</groupId>
     <artifactId>barn</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
 
     <name>Barn</name>
@@ -134,6 +134,16 @@
                         <arg>-Xlint:all</arg>
                         <arg>-Xlint:-processing</arg>
                         <arg>-Werror</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>info.picocli</groupId>
+                            <artifactId>picocli-codegen</artifactId>
+                            <version>${picocli.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <compilerArgs combine.children="append">
+                        <arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
