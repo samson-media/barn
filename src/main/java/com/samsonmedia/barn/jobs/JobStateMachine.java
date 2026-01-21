@@ -12,7 +12,7 @@ import com.samsonmedia.barn.state.JobState;
  *
  * <p>Valid transitions:
  * <ul>
- *   <li>QUEUED → RUNNING, CANCELED</li>
+ *   <li>QUEUED → RUNNING, FAILED, CANCELED</li>
  *   <li>RUNNING → SUCCEEDED, FAILED, CANCELED</li>
  *   <li>FAILED → QUEUED (for retry)</li>
  *   <li>SUCCEEDED → (none, terminal)</li>
@@ -22,7 +22,7 @@ import com.samsonmedia.barn.state.JobState;
 public final class JobStateMachine {
 
     private static final Map<JobState, Set<JobState>> VALID_TRANSITIONS = Map.of(
-        JobState.QUEUED, Set.of(JobState.RUNNING, JobState.CANCELED),
+        JobState.QUEUED, Set.of(JobState.RUNNING, JobState.FAILED, JobState.CANCELED),
         JobState.RUNNING, Set.of(JobState.SUCCEEDED, JobState.FAILED, JobState.CANCELED),
         JobState.FAILED, Set.of(JobState.QUEUED),  // For retry
         JobState.SUCCEEDED, Set.of(),

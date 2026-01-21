@@ -60,10 +60,9 @@ class JobStateMachineTest {
         }
 
         @Test
-        void queued_toFailed_shouldThrowException() {
-            assertThatThrownBy(() ->
-                JobStateMachine.validateTransition(JobState.QUEUED, JobState.FAILED))
-                .isInstanceOf(IllegalStateException.class);
+        void queued_toFailed_shouldBeValid() {
+            JobStateMachine.validateTransition(JobState.QUEUED, JobState.FAILED);
+            // No exception means valid - job can fail before starting (e.g., command not found)
         }
 
         @Test
@@ -107,6 +106,7 @@ class JobStateMachineTest {
         @Test
         void validTransitions_shouldReturnTrue() {
             assertThat(JobStateMachine.isValidTransition(JobState.QUEUED, JobState.RUNNING)).isTrue();
+            assertThat(JobStateMachine.isValidTransition(JobState.QUEUED, JobState.FAILED)).isTrue();
             assertThat(JobStateMachine.isValidTransition(JobState.QUEUED, JobState.CANCELED)).isTrue();
             assertThat(JobStateMachine.isValidTransition(JobState.RUNNING, JobState.SUCCEEDED)).isTrue();
             assertThat(JobStateMachine.isValidTransition(JobState.RUNNING, JobState.FAILED)).isTrue();
@@ -117,7 +117,6 @@ class JobStateMachineTest {
         @Test
         void invalidTransitions_shouldReturnFalse() {
             assertThat(JobStateMachine.isValidTransition(JobState.QUEUED, JobState.SUCCEEDED)).isFalse();
-            assertThat(JobStateMachine.isValidTransition(JobState.QUEUED, JobState.FAILED)).isFalse();
             assertThat(JobStateMachine.isValidTransition(JobState.SUCCEEDED, JobState.QUEUED)).isFalse();
             assertThat(JobStateMachine.isValidTransition(JobState.CANCELED, JobState.RUNNING)).isFalse();
         }
@@ -133,9 +132,9 @@ class JobStateMachineTest {
     class GetValidTransitions {
 
         @Test
-        void forQueued_shouldReturnRunningAndCanceled() {
+        void forQueued_shouldReturnRunningFailedAndCanceled() {
             assertThat(JobStateMachine.getValidTransitions(JobState.QUEUED))
-                .containsExactlyInAnyOrder(JobState.RUNNING, JobState.CANCELED);
+                .containsExactlyInAnyOrder(JobState.RUNNING, JobState.FAILED, JobState.CANCELED);
         }
 
         @Test
