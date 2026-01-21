@@ -7,12 +7,17 @@ import picocli.CommandLine.Spec;
 /**
  * Command for configuration management.
  *
- * <p>Placeholder implementation - full implementation in ticket #21.
+ * <p>Provides subcommands for viewing, validating, and initializing configuration.
  */
 @Command(
     name = "config",
     mixinStandardHelpOptions = true,
-    description = "Configuration management"
+    description = "Configuration management",
+    subcommands = {
+        ConfigShowCommand.class,
+        ConfigValidateCommand.class,
+        ConfigInitCommand.class
+    }
 )
 public class ConfigCommand implements Runnable {
 

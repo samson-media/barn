@@ -9,8 +9,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.samsonmedia.barn.config.JobsConfig;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.jobs.RetryCalculator;
+import com.samsonmedia.barn.monitoring.UsageMonitor;
 import com.samsonmedia.barn.state.BarnDirectories;
 
 /**
@@ -36,6 +39,7 @@ public class JobRunner {
     private final ProcessMonitor monitor;
     private final JobRepository repository;
     private final BarnDirectories dirs;
+    private final RetryCalculator retryCalculator;
 
     /**
      * Creates a JobRunner.
@@ -44,16 +48,19 @@ public class JobRunner {
      * @param monitor the process monitor
      * @param repository the job repository
      * @param dirs the directory manager
+     * @param retryCalculator the retry calculator
      */
     public JobRunner(
             ProcessExecutor executor,
             ProcessMonitor monitor,
             JobRepository repository,
-            BarnDirectories dirs) {
+            BarnDirectories dirs,
+            RetryCalculator retryCalculator) {
         this.executor = Objects.requireNonNull(executor, "executor must not be null");
         this.monitor = Objects.requireNonNull(monitor, "monitor must not be null");
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
         this.dirs = Objects.requireNonNull(dirs, "dirs must not be null");
+        this.retryCalculator = retryCalculator; // May be null to disable retries
     }
 
     /**
@@ -63,7 +70,19 @@ public class JobRunner {
      * @param dirs the directory manager
      */
     public JobRunner(JobRepository repository, BarnDirectories dirs) {
-        this(new ProcessExecutor(), new ProcessMonitor(), repository, dirs);
+        this(new ProcessExecutor(), new ProcessMonitor(), repository, dirs, null);
+    }
+
+    /**
+     * Creates a JobRunner with default executor, monitor, and retry support.
+     *
+     * @param repository the job repository
+     * @param dirs the directory manager
+     * @param jobsConfig the jobs configuration for retry settings
+     */
+    public JobRunner(JobRepository repository, BarnDirectories dirs, JobsConfig jobsConfig) {
+        this(new ProcessExecutor(), new ProcessMonitor(), repository, dirs,
+            jobsConfig != null ? new RetryCalculator(jobsConfig) : null);
     }
 
     /**
@@ -101,23 +120,46 @@ public class JobRunner {
             // Update state to RUNNING
             repository.markStarted(job.id(), pid);
 
-            // Monitor the process with heartbeat updates
-            ProcessMonitor.ProcessEvent.Completed completedEvent = monitor.monitorBlocking(
-                process,
-                event -> handleEvent(job.id(), event)
-            );
+            // Start usage monitoring
+            UsageMonitor usageMonitor = new UsageMonitor(pid, workDir, logsDir);
+            usageMonitor.start();
 
-            completed.set(true);
+            try {
+                // Monitor the process with heartbeat updates
+                ProcessMonitor.ProcessEvent.Completed completedEvent = monitor.monitorBlocking(
+                    process,
+                    event -> handleEvent(job.id(), event)
+                );
 
-            // Update final state
-            int exitCode = completedEvent.exitCode();
-            String error = exitCode == 0 ? null : "Process exited with code " + exitCode;
-            repository.markCompleted(job.id(), exitCode, error);
+                completed.set(true);
 
-            Duration duration = Duration.between(startTime, Instant.now());
-            LOG.info("Job {} completed with exit code {} in {}", job.id(), exitCode, formatDuration(duration));
+                // Update final state
+                int exitCode = completedEvent.exitCode();
+                String error = exitCode == 0 ? null : "Process exited with code " + exitCode;
 
-            return new JobResult(exitCode, duration, error);
+                // Check if we should retry
+                if (exitCode != 0 && shouldRetry(job, exitCode)) {
+                    handleRetry(job, exitCode, error);
+                    Duration duration = Duration.between(startTime, Instant.now());
+                    LOG.info("Job {} failed with exit code {} and scheduled for retry in {}",
+                        job.id(), exitCode, formatDuration(duration));
+                    return new JobResult(exitCode, duration, error, true);
+                }
+
+                repository.markCompleted(job.id(), exitCode, error);
+
+                Duration duration = Duration.between(startTime, Instant.now());
+                LOG.info("Job {} completed with exit code {} in {}", job.id(), exitCode, formatDuration(duration));
+
+                return new JobResult(exitCode, duration, error, false);
+            } finally {
+                // Always stop and close usage monitoring
+                try {
+                    usageMonitor.close();
+                } catch (IOException e) {
+                    LOG.warn("Failed to close usage monitor for job {}: {}", job.id(), e.getMessage());
+                }
+            }
 
         } catch (IOException e) {
             LOG.error("Failed to start job {}: {}", job.id(), e.getMessage(), e);
@@ -131,7 +173,7 @@ public class JobRunner {
             }
 
             Duration duration = Duration.between(startTime, Instant.now());
-            return new JobResult(-1, duration, e.getMessage());
+            return new JobResult(-1, duration, e.getMessage(), false);
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -146,8 +188,29 @@ public class JobRunner {
             }
 
             Duration duration = Duration.between(startTime, Instant.now());
-            return new JobResult(-1, duration, "Job was interrupted");
+            return new JobResult(-1, duration, "Job was interrupted", false);
         }
+    }
+
+    private boolean shouldRetry(Job job, int exitCode) {
+        if (retryCalculator == null) {
+            return false;
+        }
+        // Create a temporary job with the exit code to check retry eligibility
+        Job jobWithExitCode = new Job(
+            job.id(), job.state(), job.command(), job.tag(),
+            job.createdAt(), job.startedAt(), job.finishedAt(),
+            exitCode, job.error(), job.pid(), job.heartbeat(),
+            job.retryCount(), job.retryAt()
+        );
+        return retryCalculator.shouldRetry(jobWithExitCode);
+    }
+
+    private void handleRetry(Job job, int exitCode, String error) throws IOException {
+        Instant retryAt = retryCalculator.calculateRetryAt(job);
+        repository.scheduleRetry(job.id(), retryAt, exitCode, error);
+        LOG.info("Job {} retry {} of {} scheduled for {}",
+            job.id(), job.retryCount() + 1, retryCalculator.getMaxRetries(), retryAt);
     }
 
     private void handleEvent(String jobId, ProcessMonitor.ProcessEvent event) {
@@ -189,14 +252,37 @@ public class JobRunner {
      * @param exitCode the process exit code (-1 if process failed to start)
      * @param duration the total runtime
      * @param error the error message, if any
+     * @param retryScheduled true if a retry was scheduled
      */
-    public record JobResult(int exitCode, Duration duration, String error) {
+    public record JobResult(int exitCode, Duration duration, String error, boolean retryScheduled) {
+
+        /**
+         * Creates a JobResult without retry information (defaults to false).
+         *
+         * @param exitCode the process exit code
+         * @param duration the total runtime
+         * @param error the error message, if any
+         */
+        public JobResult(int exitCode, Duration duration, String error) {
+            this(exitCode, duration, error, false);
+        }
 
         /**
          * Returns true if the job completed successfully.
+         *
+         * @return true if exit code is 0
          */
         public boolean isSuccess() {
             return exitCode == 0;
+        }
+
+        /**
+         * Returns true if the job failed but a retry was scheduled.
+         *
+         * @return true if a retry is pending
+         */
+        public boolean isRetryPending() {
+            return !isSuccess() && retryScheduled;
         }
     }
 }

@@ -265,13 +265,30 @@ public class JobRepository {
      * @throws IOException if update fails
      */
     public void scheduleRetry(String id, Instant retryAt) throws IOException {
+        scheduleRetry(id, retryAt, null, null);
+    }
+
+    /**
+     * Schedules a job for retry with history recording.
+     *
+     * @param id the job ID
+     * @param retryAt when to retry
+     * @param exitCode the exit code from the failed attempt (may be null)
+     * @param error the error message from the failed attempt (may be null)
+     * @throws IOException if update fails
+     */
+    public void scheduleRetry(String id, Instant retryAt, Integer exitCode, String error) throws IOException {
         Objects.requireNonNull(id, "id must not be null");
         Objects.requireNonNull(retryAt, "retryAt must not be null");
 
         StateFiles stateFiles = new StateFiles(dirs.getJobDir(id));
 
-        // Increment retry count
+        // Record retry history entry before incrementing count
         int currentCount = stateFiles.readRetryCount().orElse(0);
+        String historyEntry = formatRetryHistoryEntry(currentCount, exitCode, error);
+        stateFiles.appendRetryHistory(historyEntry);
+
+        // Increment retry count
         stateFiles.writeRetryCount(currentCount + 1);
         stateFiles.writeRetryAt(retryAt);
 
@@ -281,8 +298,24 @@ public class JobRepository {
         // Clear runtime state
         stateFiles.writeStartedAt(null);
         stateFiles.writeHeartbeat(null);
+        stateFiles.writeFinishedAt(null);
 
         LOG.info("Job {} scheduled for retry at {} (attempt {})", id, retryAt, currentCount + 1);
+    }
+
+    private String formatRetryHistoryEntry(int attempt, Integer exitCode, String error) {
+        StringBuilder entry = new StringBuilder();
+        entry.append(Instant.now().toString());
+        entry.append("|attempt=").append(attempt + 1);
+        if (exitCode != null) {
+            entry.append("|exit_code=").append(exitCode);
+        }
+        if (error != null) {
+            // Escape newlines and pipes in error message
+            String safeError = error.replace("\n", " ").replace("|", ";");
+            entry.append("|error=").append(safeError);
+        }
+        return entry.toString();
     }
 
     /**

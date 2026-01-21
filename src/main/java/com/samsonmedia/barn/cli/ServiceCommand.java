@@ -7,12 +7,22 @@ import picocli.CommandLine.Spec;
 /**
  * Command to manage the Barn service.
  *
- * <p>Placeholder implementation - full implementation in ticket #16.
+ * <p>Provides subcommands for starting, stopping, and monitoring the service.
  */
 @Command(
     name = "service",
     mixinStandardHelpOptions = true,
-    description = "Manage the Barn service"
+    description = "Manage the Barn service",
+    subcommands = {
+        ServiceStartCommand.class,
+        ServiceStopCommand.class,
+        ServiceRestartCommand.class,
+        ServiceReloadCommand.class,
+        ServiceStatusCommand.class,
+        ServiceLogsCommand.class,
+        ServiceInstallCommand.class,
+        ServiceUninstallCommand.class
+    }
 )
 public class ServiceCommand implements Runnable {
 

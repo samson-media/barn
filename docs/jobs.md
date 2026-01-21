@@ -160,6 +160,7 @@ logs/
   stderr.log
   progress.log
   upload.log
+  usage.csv
 ```
 
 ### Notes
@@ -167,6 +168,81 @@ logs/
 - Append-only
 - Human-readable
 - `progress.log` contains FFmpeg `-progress` output
+- `usage.csv` contains resource usage samples (see below)
+
+---
+
+## Resource Usage Monitoring
+
+During job execution, Barn monitors and logs resource usage metrics.
+
+### Usage Log File
+
+```
+logs/usage.csv
+```
+
+### CSV Format
+
+```csv
+timestamp,cpu_percent,memory_bytes,disk_bytes,gpu_percent,gpu_memory_bytes
+2026-01-21T18:42:05Z,45.20,134217728,52428800,,
+2026-01-21T18:42:10Z,52.30,142606336,58720256,,
+```
+
+### Metrics Collected
+
+| Metric | Description |
+|--------|-------------|
+| `timestamp` | ISO-8601 timestamp of the sample |
+| `cpu_percent` | Process CPU usage as percentage |
+| `memory_bytes` | Process resident memory in bytes |
+| `disk_bytes` | Working directory disk usage in bytes |
+| `gpu_percent` | GPU utilization (if nvidia-smi available) |
+| `gpu_memory_bytes` | GPU memory usage (if nvidia-smi available) |
+
+### Collection Interval
+
+Metrics are sampled every 5 seconds by default.
+
+### Viewing Usage Data
+
+Use the `barn usage` command to view resource usage:
+
+```bash
+# Show usage summary and recent samples
+barn usage <job-id> --offline
+
+# Show summary statistics only
+barn usage <job-id> --offline --summary
+
+# Export raw CSV data
+barn usage <job-id> --offline --csv
+
+# Limit to last N samples
+barn usage <job-id> --offline --limit 100
+
+# Output as JSON
+barn usage <job-id> --offline --output json
+```
+
+### Example Output
+
+```
+Resource Usage for Job: job-9f83c
+================================================================================
+
+Summary (120 samples):
+  CPU:     avg=45.2%  max=98.5%  min=2.1%
+  Memory:  avg=128.5 MB  max=256.0 MB  min=64.0 MB
+  Disk:    max=1.2 GB
+
+Recent Samples:
+TIMESTAMP                  CPU %       MEMORY          DISK
+2026-01-21 18:40:05        45.2       128.5 MB        50.0 MB
+2026-01-21 18:40:10        52.3       135.8 MB        52.4 MB
+...
+```
 
 ---
 
@@ -217,6 +293,7 @@ Contains daemon-level events, not job output.
     ffmpeg.stdout.log
     ffmpeg.stderr.log
     progress.log
+    usage.csv
 ```
 
 ---

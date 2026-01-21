@@ -60,6 +60,17 @@ public final class ConfigLoader {
     }
 
     /**
+     * Static convenience method to load configuration from a file.
+     *
+     * @param path the path to the config file
+     * @return the loaded configuration
+     * @throws ConfigException if the file cannot be read or is invalid
+     */
+    public static Config load(Path path) {
+        return new ConfigLoader().loadFromFile(path);
+    }
+
+    /**
      * Loads configuration, optionally with an explicit config file.
      *
      * @param explicitPath optional explicit config file path

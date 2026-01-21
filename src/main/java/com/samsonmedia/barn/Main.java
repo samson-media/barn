@@ -36,6 +36,8 @@ public final class Main {
      * @return the exit code (0 for success, non-zero for failure)
      */
     public static int run(String[] args) {
-        return new CommandLine(new BarnCommand()).execute(args);
+        CommandLine cmd = new CommandLine(new BarnCommand());
+        cmd.setCaseInsensitiveEnumValuesAllowed(true);
+        return cmd.execute(args);
     }
 }

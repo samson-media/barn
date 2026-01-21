@@ -19,6 +19,7 @@ import picocli.CommandLine.Spec;
         RunCommand.class,
         StatusCommand.class,
         DescribeCommand.class,
+        UsageCommand.class,
         KillCommand.class,
         CleanCommand.class,
         ServiceCommand.class,

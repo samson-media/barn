@@ -169,6 +169,15 @@ public final class BarnDirectories {
     }
 
     /**
+     * Returns the IPC socket file path.
+     *
+     * @return the socket file path
+     */
+    public Path getSocketPath() {
+        return baseDir.resolve("barn.sock");
+    }
+
+    /**
      * Initializes the top-level directory structure.
      *
      * <p>Creates the base directory and all subdirectories if they don't exist.

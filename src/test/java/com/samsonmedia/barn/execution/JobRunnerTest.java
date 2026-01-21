@@ -177,7 +177,7 @@ class JobRunnerTest {
             ProcessExecutor executor = new ProcessExecutor();
             ProcessMonitor monitor = new ProcessMonitor();
 
-            JobRunner customRunner = new JobRunner(executor, monitor, repository, dirs);
+            JobRunner customRunner = new JobRunner(executor, monitor, repository, dirs, null);
 
             assertThat(customRunner).isNotNull();
         }

@@ -2,11 +2,15 @@ package com.samsonmedia.barn.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import picocli.CommandLine;
 
@@ -15,17 +19,23 @@ import picocli.CommandLine;
  */
 class BarnCommandTest {
 
+    @TempDir
+    private Path tempDir;
+
     private CommandLine commandLine;
     private StringWriter outWriter;
     private StringWriter errWriter;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
         commandLine = new CommandLine(new BarnCommand());
         outWriter = new StringWriter();
         errWriter = new StringWriter();
         commandLine.setOut(new PrintWriter(outWriter));
         commandLine.setErr(new PrintWriter(errWriter));
+
+        // Initialize barn directories in temp location
+        Files.createDirectories(tempDir.resolve("jobs"));
     }
 
     @Test
@@ -172,58 +182,59 @@ class BarnCommandTest {
     }
 
     @Test
-    void runSubcommand_shouldShowNotImplementedMessage() {
+    void runSubcommand_withNoArgs_shouldShowUsageError() {
         // Arrange & Act
         int exitCode = commandLine.execute("run");
 
-        // Assert
-        assertThat(exitCode).isZero();
-        String output = outWriter.toString();
-        assertThat(output).contains("Run command not yet implemented");
+        // Assert - run with no command args shows usage help (required parameter missing)
+        assertThat(exitCode).isNotZero();
+        // Picocli shows usage when required parameter is missing
+        String output = errWriter.toString();
+        assertThat(output).contains("run");
     }
 
     @Test
-    void statusSubcommand_shouldShowNotImplementedMessage() {
-        // Arrange & Act
-        int exitCode = commandLine.execute("status");
+    void statusSubcommand_withoutOffline_shouldIndicateServiceNeeded() {
+        // Arrange & Act - use temp dir to ensure no service is running there
+        int exitCode = commandLine.execute("status", "--barn-dir", tempDir.toString());
 
-        // Assert
-        assertThat(exitCode).isZero();
-        String output = outWriter.toString();
-        assertThat(output).contains("Status command not yet implemented");
+        // Assert - without --offline, should fail with service not running message
+        assertThat(exitCode).isNotZero();
+        String output = errWriter.toString();
+        assertThat(output).containsIgnoringCase("service");
     }
 
     @Test
-    void describeSubcommand_shouldShowNotImplementedMessage() {
+    void describeSubcommand_withNoJobId_shouldShowUsageError() {
         // Arrange & Act
         int exitCode = commandLine.execute("describe");
 
-        // Assert
-        assertThat(exitCode).isZero();
-        String output = outWriter.toString();
-        assertThat(output).contains("Describe command not yet implemented");
+        // Assert - describe without job ID shows usage help (required parameter missing)
+        assertThat(exitCode).isNotZero();
+        String output = errWriter.toString();
+        assertThat(output).contains("describe");
     }
 
     @Test
-    void killSubcommand_shouldShowNotImplementedMessage() {
+    void killSubcommand_withNoJobId_shouldShowUsageError() {
         // Arrange & Act
         int exitCode = commandLine.execute("kill");
 
-        // Assert
-        assertThat(exitCode).isZero();
-        String output = outWriter.toString();
-        assertThat(output).contains("Kill command not yet implemented");
+        // Assert - kill without job ID shows usage help (required parameter missing)
+        assertThat(exitCode).isNotZero();
+        String output = errWriter.toString();
+        assertThat(output).contains("kill");
     }
 
     @Test
-    void cleanSubcommand_shouldShowNotImplementedMessage() {
-        // Arrange & Act
-        int exitCode = commandLine.execute("clean");
+    void cleanSubcommand_withoutOptions_shouldIndicateServiceNeeded() {
+        // Arrange & Act - use temp dir to ensure no service is running there
+        int exitCode = commandLine.execute("clean", "--barn-dir", tempDir.toString());
 
-        // Assert
-        assertThat(exitCode).isZero();
-        String output = outWriter.toString();
-        assertThat(output).contains("Clean command not yet implemented");
+        // Assert - clean without --offline fails with service not running
+        assertThat(exitCode).isNotZero();
+        String output = errWriter.toString();
+        assertThat(output).containsIgnoringCase("service");
     }
 
     @Test
