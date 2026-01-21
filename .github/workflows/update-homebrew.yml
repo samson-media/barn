@@ -1,0 +1,82 @@
+name: Update Homebrew
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-homebrew:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get release info
+        id: release
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Get checksums from release
+          curl -sL "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/SHA256SUMS" -o SHA256SUMS
+
+          MACOS_ARM64_SHA=$(grep barn-macos-arm64 SHA256SUMS | awk '{print $1}')
+          MACOS_X64_SHA=$(grep barn-macos-x64 SHA256SUMS | awk '{print $1}')
+
+          echo "macos_arm64_sha=$MACOS_ARM64_SHA" >> $GITHUB_OUTPUT
+          echo "macos_x64_sha=$MACOS_X64_SHA" >> $GITHUB_OUTPUT
+
+      - name: Checkout homebrew tap
+        uses: actions/checkout@v4
+        with:
+          repository: samson-media/homebrew-barn
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update formula
+        run: |
+          cat > homebrew-tap/Formula/barn.rb << 'EOF'
+          class Barn < Formula
+            desc "Cross-platform job daemon for media processing"
+            homepage "https://github.com/samson-media/barn"
+            version "${{ steps.release.outputs.version }}"
+            license "MIT"
+
+            on_macos do
+              on_arm do
+                url "https://github.com/samson-media/barn/releases/download/v${{ steps.release.outputs.version }}/barn-macos-arm64"
+                sha256 "${{ steps.release.outputs.macos_arm64_sha }}"
+
+                def install
+                  bin.install "barn-macos-arm64" => "barn"
+                end
+              end
+
+              on_intel do
+                url "https://github.com/samson-media/barn/releases/download/v${{ steps.release.outputs.version }}/barn-macos-x64"
+                sha256 "${{ steps.release.outputs.macos_x64_sha }}"
+
+                def install
+                  bin.install "barn-macos-x64" => "barn"
+                end
+              end
+            end
+
+            service do
+              run [opt_bin/"barn", "service", "run"]
+              keep_alive true
+              log_path var/"log/barn.log"
+              error_log_path var/"log/barn.error.log"
+            end
+
+            test do
+              assert_match "barn", shell_output("#{bin}/barn --version")
+            end
+          end
+          EOF
+
+      - name: Commit and push
+        run: |
+          cd homebrew-tap
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add Formula/barn.rb
+          git commit -m "Update barn to ${{ steps.release.outputs.version }}"
+          git push
