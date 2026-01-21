@@ -1,11 +1,13 @@
 name: Build
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,35 +19,5 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Run tests
+      - name: Build and test
         run: mvn verify -Dspotbugs.skip=true -Dpmd.skip=true
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: target/surefire-reports/
-
-  build-jar:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Build JAR
-        run: mvn package -DskipTests -Dspotbugs.skip=true -Dpmd.skip=true
-
-      - name: Upload JAR
-        uses: actions/upload-artifact@v4
-        with:
-          name: barn-jar
-          path: target/barn-*.jar
-          retention-days: 7
