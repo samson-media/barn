@@ -72,16 +72,22 @@ sudo mv barn /usr/local/bin/
 
 ### Windows
 
-**Download the binary:**
-
-1. Download `barn-windows-x64.exe` from the [latest release](https://github.com/samson-media/barn/releases/latest)
-2. Rename to `barn.exe` and move to a directory in your PATH
-
-**PowerShell:**
+**PowerShell (recommended):**
 ```powershell
-Invoke-WebRequest -Uri "https://github.com/samson-media/barn/releases/latest/download/barn-windows-x64.exe" -OutFile "barn.exe"
-Move-Item barn.exe C:\Windows\System32\
+# Create install directory
+New-Item -ItemType Directory -Force -Path "$env:LOCALAPPDATA\Programs\barn"
+
+# Download
+Invoke-WebRequest -Uri "https://github.com/samson-media/barn/releases/latest/download/barn-windows-x64.exe" -OutFile "$env:LOCALAPPDATA\Programs\barn\barn.exe"
+
+# Add to PATH (current user)
+$path = [Environment]::GetEnvironmentVariable("Path", "User")
+if ($path -notlike "*$env:LOCALAPPDATA\Programs\barn*") {
+    [Environment]::SetEnvironmentVariable("Path", "$path;$env:LOCALAPPDATA\Programs\barn", "User")
+}
 ```
+
+Restart your terminal after installation.
 
 ### Verify Installation
 
