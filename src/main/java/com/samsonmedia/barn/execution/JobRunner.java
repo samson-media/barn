@@ -1,6 +1,7 @@
 package com.samsonmedia.barn.execution;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
@@ -163,6 +164,15 @@ public class JobRunner {
 
         } catch (IOException e) {
             LOG.error("Failed to start job {}: {}", job.id(), e.getMessage(), e);
+
+            // Write error to stderr.log so it appears in --logs output
+            try {
+                var stderrFile = dirs.getJobLogsDir(job.id()).resolve(STDERR_LOG);
+                Files.createDirectories(stderrFile.getParent());
+                Files.writeString(stderrFile, "Failed to start process: " + e.getMessage() + "\n");
+            } catch (IOException writeError) {
+                LOG.warn("Failed to write error to stderr.log for job {}: {}", job.id(), writeError.getMessage());
+            }
 
             if (!completed.get()) {
                 try {
