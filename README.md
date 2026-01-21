@@ -128,3 +128,11 @@ Developers can use the --offline command line option to test how the service beh
 ## Documentation
 
 - [Barn Temporary Directory Layout](docs/jobs.md) describes how barn tracks jobs and storage
+- [Barn Configuration](docs/config.md) describes configuration options, retry behavior, and cleanup policies
+- [Development Guide](docs/development.md) covers local development setup and building from source
+- [Releasing](docs/releasing.md) describes version management and the release process
+- [CI/CD](docs/ci-cd.md) documents the GitHub Actions workflows for building and releasing
+- [Distribution](docs/distribution.md) covers package manager setup (WinGet, apt, AUR, Homebrew)
+- [Auto-Update](docs/auto-update.md) explains the built-in `barn update` command
+- [Automated Testing](docs/testing-automated.md) covers the test suite, running tests, and CI integration
+- [Manual Testing](docs/testing-manual.md) provides step-by-step manual test procedures

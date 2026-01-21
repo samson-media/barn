@@ -128,6 +128,9 @@ Written once at job creation.
 | `error`       | Human-readable failure reason                          |
 | `pid`         | OS process ID (best-effort)                            |
 | `heartbeat`   | Last liveness update                                   |
+| `retry_count` | Current retry attempt (0, 1, 2, ...)                   |
+| `retry_at`    | Timestamp for next retry attempt                       |
+| `retry_history` | Log of previous attempt exit codes and errors        |
 
 All values are stored as **plain text**.
 
