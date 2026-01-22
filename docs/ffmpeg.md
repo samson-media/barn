@@ -2,61 +2,55 @@
 
 This guide covers FFmpeg-specific behavior when running jobs with Barn.
 
-## Output Streams (stdout vs stderr)
+## Recommended FFmpeg Command
 
-**Important:** FFmpeg outputs progress and status information to **stderr**, not stdout. This is by design.
-
-### Why FFmpeg Uses stderr
-
-FFmpeg is designed to support piping video data through stdout:
+Use `-progress pipe:1` to output machine-readable progress to stdout:
 
 ```bash
-# Example: pipe video to another command
-ffmpeg -i input.mp4 -f mp4 - | another_command
+barn run -- ffmpeg -y -progress pipe:1 -threads 0 -i input.mkv -c:v libx264 output.mp4
 ```
 
-To make this work, FFmpeg sends:
-- **stdout**: Raw video/audio data (when outputting to `-` or pipe)
-- **stderr**: All informational messages (version, configuration, progress, warnings, errors)
+This outputs structured key=value pairs to `stdout.log`:
 
-### What This Means for Barn
-
-When you run an FFmpeg job with Barn:
-
-```bash
-barn run -- ffmpeg -i input.mkv -c:v libx264 output.mp4
+```
+frame=100
+fps=120.5
+stream_0_0_q=28.0
+bitrate=4500.0kbits/s
+total_size=5000000
+out_time_us=4000000
+out_time_ms=4000000
+out_time=00:00:04.000000
+dup_frames=0
+drop_frames=0
+speed=3.5x
+progress=continue
 ```
 
-The logs will show:
-- `stdout.log`: Empty (video goes to output file)
-- `stderr.log`: All FFmpeg output (version info, progress, statistics)
+The final block will have `progress=end` when complete.
 
-Example `barn describe --logs` output:
-```json
-{
-  "logs": {
-    "stdout": "",
-    "stderr": "ffmpeg version 7.0...\nframe=1000 fps=120 q=28.0 size=50000kB..."
-  }
-}
-```
+Human-readable output (version info, warnings, errors) still goes to `stderr.log`.
 
-This is **correct behavior**, not a bug.
+### Recommended Flags
 
-### Common FFmpeg Patterns
+| Flag | Purpose |
+|------|---------|
+| `-y` | Overwrite output without asking |
+| `-progress pipe:1` | Output machine-readable progress to stdout |
+| `-threads 0` | Auto-detect optimal thread count |
+
+### Common Patterns
 
 #### Transcoding to File
 
 ```bash
-barn run --tag=transcode -- ffmpeg -y -i input.mkv -c:v libx264 -crf 23 output.mp4
+barn run --tag=transcode -- ffmpeg -y -progress pipe:1 -threads 0 -i input.mkv -c:v libx264 -crf 23 output.mp4
 ```
-- stdout: empty
-- stderr: progress and statistics
 
 #### Hardware-Accelerated Encoding (macOS)
 
 ```bash
-barn run --tag=transcode -- ffmpeg -y -i input.mkv -c:v h264_videotoolbox -b:v 4M output.mp4
+barn run --tag=transcode -- ffmpeg -y -progress pipe:1 -threads 0 -i input.mkv -c:v h264_videotoolbox -b:v 4M output.mp4
 ```
 
 #### Analyzing Media with ffprobe
@@ -67,19 +61,34 @@ barn run --tag=analyze -- ffprobe -v quiet -print_format json -show_format -show
 - stdout: JSON output (when using `-print_format json`)
 - stderr: errors only (when using `-v quiet`)
 
-### Monitoring FFmpeg Jobs
+## Output Streams (stdout vs stderr)
+
+By default (without `-progress pipe:1`), FFmpeg outputs progress to **stderr**, not stdout. This is by design to allow piping video data through stdout:
+
+```bash
+# FFmpeg can pipe video to another command via stdout
+ffmpeg -i input.mp4 -f mp4 - | another_command
+```
+
+Without `-progress pipe:1`:
+- `stdout.log`: Empty (video goes to output file)
+- `stderr.log`: All FFmpeg output (version info, progress, statistics)
+
+This is correct behavior, not a bug. Use `-progress pipe:1` to get progress in stdout.
+
+## Monitoring FFmpeg Jobs
 
 To watch FFmpeg progress in real-time:
 
 ```bash
-# Watch the stderr log
-tail -f /tmp/barn/jobs/<job-id>/logs/stderr.log
+# Watch the stdout log (with -progress pipe:1)
+tail -f /tmp/barn/jobs/<job-id>/logs/stdout.log
 
 # Or use barn describe with --logs
-watch -n 2 'barn describe <job-id> --logs --output=json | jq .logs.stderr'
+watch -n 2 'barn describe <job-id> --logs --output=json | jq -r .logs.stdout'
 ```
 
-### FFmpeg Exit Codes
+## FFmpeg Exit Codes
 
 | Exit Code | Meaning |
 |-----------|---------|
@@ -88,30 +97,18 @@ watch -n 2 'barn describe <job-id> --logs --output=json | jq .logs.stderr'
 | 69 | Invalid data in input |
 | 183 | Output file already exists (use `-y` to overwrite) |
 
-### Recommended FFmpeg Flags for Barn
-
-```bash
-ffmpeg \
-  -y                    # Overwrite output without asking
-  -threads 0            # Auto-detect optimal thread count
-  -progress pipe:2      # Send progress to stderr (default)
-  -stats                # Show encoding statistics
-  -loglevel info        # Show info level logs (default)
-  input.mp4 output.mp4
-```
-
-### Suppressing FFmpeg Output
+## Suppressing FFmpeg Output
 
 If you want minimal output:
 
 ```bash
-ffmpeg -y -loglevel error -i input.mp4 output.mp4
+ffmpeg -y -progress pipe:1 -loglevel error -i input.mp4 output.mp4
 ```
 
-Or for completely silent operation:
+Or for completely silent operation (progress only, no errors):
 
 ```bash
-ffmpeg -y -loglevel quiet -i input.mp4 output.mp4
+ffmpeg -y -progress pipe:1 -loglevel quiet -i input.mp4 output.mp4
 ```
 
 Note: Even with `-loglevel quiet`, fatal errors still go to stderr.
