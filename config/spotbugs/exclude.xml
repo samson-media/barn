@@ -179,4 +179,16 @@
         <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
     </Match>
 
+    <!-- BarnLogger.setOutput() intentionally exposes mutable state for testing purposes -->
+    <Match>
+        <Class name="~.*BarnLogger.*"/>
+        <Bug pattern="EI_EXPOSE_STATIC_REP2"/>
+    </Match>
+
+    <!-- BarnLogger error logging intentionally prints stack traces - that's its purpose -->
+    <Match>
+        <Class name="~.*BarnLogger.*"/>
+        <Bug pattern="INFORMATION_EXPOSURE_THROUGH_AN_ERROR_MESSAGE"/>
+    </Match>
+
 </FindBugsFilter>

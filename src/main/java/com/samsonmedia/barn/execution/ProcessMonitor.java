@@ -9,8 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Monitors a running process and emits events.
@@ -20,7 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ProcessMonitor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProcessMonitor.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ProcessMonitor.class);
     private static final Duration DEFAULT_HEARTBEAT_INTERVAL = Duration.ofSeconds(10);
 
     private final Duration heartbeatInterval;

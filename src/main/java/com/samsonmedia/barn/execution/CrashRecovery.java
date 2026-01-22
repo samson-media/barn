@@ -6,13 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.Config;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
 import com.samsonmedia.barn.jobs.RetryCalculator;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
 
@@ -31,7 +29,7 @@ import com.samsonmedia.barn.state.JobState;
  */
 public class CrashRecovery {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CrashRecovery.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(CrashRecovery.class);
     private static final String KILLED_ERROR = "Process killed - daemon restarted";
 
     private final JobRepository repository;

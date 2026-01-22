@@ -7,13 +7,11 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.JobsConfig;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
 import com.samsonmedia.barn.jobs.RetryCalculator;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.monitoring.UsageMonitor;
 import com.samsonmedia.barn.state.BarnDirectories;
 
@@ -32,7 +30,7 @@ import com.samsonmedia.barn.state.BarnDirectories;
  */
 public class JobRunner {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JobRunner.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(JobRunner.class);
     private static final String STDOUT_LOG = "stdout.log";
     private static final String STDERR_LOG = "stderr.log";
 

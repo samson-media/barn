@@ -10,13 +10,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.samsonmedia.barn.config.JobsConfig;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.AtomicFiles;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
@@ -30,7 +28,7 @@ import com.samsonmedia.barn.state.StateFiles;
  */
 public class JobRepository {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JobRepository.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(JobRepository.class);
     private static final String MANIFEST_FILE = "manifest.json";
 
     private final BarnDirectories dirs;

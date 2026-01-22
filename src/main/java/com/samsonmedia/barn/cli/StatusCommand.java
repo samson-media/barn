@@ -12,9 +12,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +21,7 @@ import com.samsonmedia.barn.ipc.IpcClient;
 import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
 
@@ -42,7 +40,7 @@ import picocli.CommandLine.Option;
 )
 public class StatusCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(StatusCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(StatusCommand.class);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
         .ofPattern("yyyy-MM-dd HH:mm:ss")
         .withZone(ZoneId.systemDefault());

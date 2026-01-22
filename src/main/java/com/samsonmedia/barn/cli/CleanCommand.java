@@ -12,9 +12,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,6 +21,7 @@ import com.samsonmedia.barn.ipc.IpcClient;
 import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
 import com.samsonmedia.barn.util.DurationParser;
@@ -41,7 +39,7 @@ import picocli.CommandLine.Option;
 )
 public class CleanCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CleanCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(CleanCommand.class);
 
     @Option(names = {"--all"}, description = "Remove all completed jobs regardless of age")
     private boolean all;

@@ -9,9 +9,6 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.samsonmedia.barn.config.Config;
@@ -24,6 +21,7 @@ import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.ipc.IpcServer;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.logging.LoggingConfig;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
@@ -41,7 +39,7 @@ import com.samsonmedia.barn.state.JobState;
  */
 public class BarnService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(BarnService.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(BarnService.class);
 
     private final Config config;
     private final BarnDirectories dirs;

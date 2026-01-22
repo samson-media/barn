@@ -11,8 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Manages Linux systemd service operations.
@@ -22,7 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SystemdManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SystemdManager.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(SystemdManager.class);
     private static final String SERVICE_NAME = "barn.service";
     private static final long COMMAND_TIMEOUT_SECONDS = 30;
 

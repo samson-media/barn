@@ -8,10 +8,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.ConfigDefaults;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -26,7 +24,7 @@ import picocli.CommandLine.Option;
 )
 public class ServiceLogsCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceLogsCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ServiceLogsCommand.class);
     private static final String LOG_FILE_NAME = "barn.log";
 
     @Option(names = {"--follow", "-f"}, description = "Follow log output")

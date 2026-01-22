@@ -9,8 +9,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * A file-based lock for coordinating access to resources.
@@ -20,7 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class FileLock implements AutoCloseable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FileLock.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(FileLock.class);
 
     private final Path lockFile;
     private final FileChannel channel;

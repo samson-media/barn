@@ -9,8 +9,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Manages macOS launchd service operations.
@@ -20,7 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class LaunchdManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LaunchdManager.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(LaunchdManager.class);
     private static final String LABEL = "com.samsonmedia.barn";
     private static final long COMMAND_TIMEOUT_SECONDS = 30;
 

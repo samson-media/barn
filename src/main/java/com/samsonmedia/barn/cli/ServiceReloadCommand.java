@@ -6,12 +6,10 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.ConfigDefaults;
 import com.samsonmedia.barn.ipc.IpcClient;
 import com.samsonmedia.barn.ipc.IpcException;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -26,7 +24,7 @@ import picocli.CommandLine.Option;
 )
 public class ServiceReloadCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceReloadCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ServiceReloadCommand.class);
 
     @Option(names = {"--barn-dir"}, description = "Barn data directory", hidden = true)
     private Path barnDir;

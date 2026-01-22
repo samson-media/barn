@@ -10,12 +10,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.CleanupConfig;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.JobState;
 
 /**
@@ -23,7 +21,7 @@ import com.samsonmedia.barn.state.JobState;
  */
 public class CleanupScheduler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CleanupScheduler.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(CleanupScheduler.class);
 
     private final JobRepository repository;
     private final CleanupConfig config;

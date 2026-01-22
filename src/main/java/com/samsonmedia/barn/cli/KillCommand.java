@@ -6,9 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -18,6 +15,7 @@ import com.samsonmedia.barn.ipc.IpcClient;
 import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
 
@@ -35,7 +33,7 @@ import picocli.CommandLine.Parameters;
 )
 public class KillCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(KillCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(KillCommand.class);
 
     @Parameters(index = "0", description = "Job ID")
     private String jobId;

@@ -12,8 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Collects resource usage metrics for a process.
@@ -22,7 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public class UsageCollector {
 
-    private static final Logger LOG = LoggerFactory.getLogger(UsageCollector.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(UsageCollector.class);
     private static final int COMMAND_TIMEOUT_SECONDS = 5;
 
     private final boolean isWindows;

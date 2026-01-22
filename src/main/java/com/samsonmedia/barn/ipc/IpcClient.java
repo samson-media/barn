@@ -15,12 +15,10 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * IPC client for communicating with the barn service.
@@ -30,7 +28,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  */
 public class IpcClient implements AutoCloseable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(IpcClient.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(IpcClient.class);
     private static final int DEFAULT_TIMEOUT_MS = 30000;
 
     private final Path socketPath;

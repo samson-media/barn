@@ -10,8 +10,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Monitors resource usage for a process over time.
@@ -20,7 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class UsageMonitor implements Closeable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(UsageMonitor.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(UsageMonitor.class);
 
     /** Default collection interval in seconds. */
     public static final int DEFAULT_INTERVAL_SECONDS = 5;

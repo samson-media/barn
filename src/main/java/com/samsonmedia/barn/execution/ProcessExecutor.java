@@ -10,8 +10,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Executes processes and captures their output.
@@ -21,7 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ProcessExecutor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProcessExecutor.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ProcessExecutor.class);
 
     /**
      * Executes a command and returns the process.

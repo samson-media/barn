@@ -11,14 +11,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.ConfigDefaults;
 import com.samsonmedia.barn.config.OperatingSystem;
 import com.samsonmedia.barn.ipc.IpcClient;
 import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.platform.linux.SystemdManager;
 import com.samsonmedia.barn.platform.macos.LaunchdManager;
 import com.samsonmedia.barn.platform.windows.WindowsServiceManager;
@@ -38,7 +36,7 @@ import picocli.CommandLine.Option;
 )
 public class ServiceStatusCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceStatusCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ServiceStatusCommand.class);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
         .ofPattern("yyyy-MM-dd HH:mm:ss")
         .withZone(ZoneId.systemDefault());

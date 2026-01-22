@@ -8,8 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Writes usage records to a CSV file.
@@ -18,7 +17,7 @@ import org.slf4j.LoggerFactory;
  */
 public class UsageLogger implements Closeable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(UsageLogger.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(UsageLogger.class);
 
     /** Default filename for usage logs. */
     public static final String USAGE_LOG_FILENAME = "usage.csv";

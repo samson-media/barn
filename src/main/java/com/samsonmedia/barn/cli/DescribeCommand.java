@@ -15,9 +15,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -27,6 +24,7 @@ import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobManifest;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.BarnDirectories;
 
 import picocli.CommandLine.Command;
@@ -43,7 +41,7 @@ import picocli.CommandLine.Parameters;
 )
 public class DescribeCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DescribeCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(DescribeCommand.class);
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter
         .ofPattern("yyyy-MM-dd HH:mm:ss")
         .withZone(ZoneId.systemDefault());

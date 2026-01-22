@@ -10,8 +10,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Manages Windows service operations using sc.exe.
@@ -21,7 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public class WindowsServiceManager {
 
-    private static final Logger LOG = LoggerFactory.getLogger(WindowsServiceManager.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(WindowsServiceManager.class);
     private static final String SERVICE_NAME = "barn";
     private static final String DISPLAY_NAME = "Barn Job Daemon";
     private static final long COMMAND_TIMEOUT_SECONDS = 30;

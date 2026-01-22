@@ -18,12 +18,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * IPC server for receiving requests from CLI clients.
@@ -32,7 +30,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
  */
 public class IpcServer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(IpcServer.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(IpcServer.class);
 
     private final Path socketPath;
     private final RequestHandler handler;

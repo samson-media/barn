@@ -2,8 +2,7 @@ package com.samsonmedia.barn.execution;
 
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Cross-platform process utilities.
@@ -13,7 +12,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class ProcessUtils {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProcessUtils.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ProcessUtils.class);
 
     private ProcessUtils() {
         // Utility class - prevent instantiation

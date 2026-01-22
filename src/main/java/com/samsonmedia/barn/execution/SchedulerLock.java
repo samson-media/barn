@@ -10,8 +10,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Lock to ensure only one scheduler runs at a time.
@@ -21,7 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class SchedulerLock implements Closeable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SchedulerLock.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(SchedulerLock.class);
 
     private final Path lockFile;
     private final FileChannel channel;

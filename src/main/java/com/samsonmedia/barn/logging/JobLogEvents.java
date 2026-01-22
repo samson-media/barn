@@ -4,9 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.jobs.Job;
 
 /**
@@ -16,7 +13,7 @@ import com.samsonmedia.barn.jobs.Job;
  */
 public final class JobLogEvents {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JobLogEvents.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(JobLogEvents.class);
 
     private JobLogEvents() {
         // Utility class

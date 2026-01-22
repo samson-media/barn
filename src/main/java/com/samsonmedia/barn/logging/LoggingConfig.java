@@ -5,13 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.LogLevel;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 
 /**
  * Configuration utilities for the logging system.
@@ -25,17 +19,15 @@ public final class LoggingConfig {
     }
 
     /**
-     * Sets the root log level at runtime.
+     * Sets the root log level at runtime and enables logging.
      *
      * @param level the log level to set
      * @throws NullPointerException if level is null
      */
     public static void setLogLevel(LogLevel level) {
         Objects.requireNonNull(level, "level must not be null");
-
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Logger rootLogger = context.getLogger(Logger.ROOT_LOGGER_NAME);
-        rootLogger.setLevel(toLogbackLevel(level));
+        BarnLogger.enable();
+        BarnLogger.setLevel(toBarnLoggerLevel(level));
     }
 
     /**
@@ -44,9 +36,7 @@ public final class LoggingConfig {
      * @return the current log level
      */
     public static LogLevel getLogLevel() {
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Logger rootLogger = context.getLogger(Logger.ROOT_LOGGER_NAME);
-        return fromLogbackLevel(rootLogger.getLevel());
+        return fromBarnLoggerLevel(BarnLogger.getLevel());
     }
 
     /**
@@ -79,28 +69,21 @@ public final class LoggingConfig {
         return Path.of(System.getProperty("java.io.tmpdir"), "barn", "logs");
     }
 
-    private static Level toLogbackLevel(LogLevel level) {
+    private static BarnLogger.Level toBarnLoggerLevel(LogLevel level) {
         return switch (level) {
-            case DEBUG -> Level.DEBUG;
-            case INFO -> Level.INFO;
-            case WARN -> Level.WARN;
-            case ERROR -> Level.ERROR;
+            case DEBUG -> BarnLogger.Level.DEBUG;
+            case INFO -> BarnLogger.Level.INFO;
+            case WARN -> BarnLogger.Level.WARN;
+            case ERROR -> BarnLogger.Level.ERROR;
         };
     }
 
-    private static LogLevel fromLogbackLevel(Level level) {
-        if (level == null || level.equals(Level.INFO)) {
-            return LogLevel.INFO;
-        }
-        if (level.equals(Level.DEBUG) || level.equals(Level.TRACE)) {
-            return LogLevel.DEBUG;
-        }
-        if (level.equals(Level.WARN)) {
-            return LogLevel.WARN;
-        }
-        if (level.equals(Level.ERROR) || level.equals(Level.OFF)) {
-            return LogLevel.ERROR;
-        }
-        return LogLevel.INFO;
+    private static LogLevel fromBarnLoggerLevel(BarnLogger.Level level) {
+        return switch (level) {
+            case DEBUG -> LogLevel.DEBUG;
+            case INFO -> LogLevel.INFO;
+            case WARN -> LogLevel.WARN;
+            case ERROR, OFF -> LogLevel.ERROR;
+        };
     }
 }

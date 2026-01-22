@@ -14,12 +14,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.Config;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
 
@@ -31,7 +29,7 @@ import com.samsonmedia.barn.state.JobState;
  */
 public class JobScheduler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JobScheduler.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(JobScheduler.class);
     private static final Duration DEFAULT_POLL_INTERVAL = Duration.ofSeconds(1);
     private static final Duration DEFAULT_SHUTDOWN_TIMEOUT = Duration.ofMinutes(5);
 

@@ -315,7 +315,7 @@ Developers can use the --offline command line option to test how the service beh
 - [Coding Standards](docs/coding-standards.md) defines code style, conventions, and quality enforcement
 - [Releasing](docs/releasing.md) describes version management and the release process
 - [CI/CD](docs/ci-cd.md) documents the GitHub Actions workflows for building and releasing
-- [Distribution](docs/distribution.md) covers package manager setup (WinGet, apt, AUR, Homebrew)
-- [Auto-Update](docs/auto-update.md) explains the built-in `barn update` command
+- [Distribution](docs/distribution.md) covers installation methods (Windows setup, Linux binary, Homebrew)
+- [Updating](docs/auto-update.md) explains how to update Barn on each platform
 - [Automated Testing](docs/testing-automated.md) covers the test suite, running tests, and CI integration
 - [Manual Testing](docs/testing-manual.md) provides step-by-step manual test procedures

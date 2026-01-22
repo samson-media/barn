@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -19,6 +16,7 @@ import com.samsonmedia.barn.ipc.IpcClient;
 import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.BarnDirectories;
 
 import picocli.CommandLine.Command;
@@ -38,7 +36,7 @@ import picocli.CommandLine.Parameters;
 )
 public class RunCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RunCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(RunCommand.class);
 
     @Option(names = {"--tag", "-t"}, description = "Tag for filtering jobs")
     private String tag;

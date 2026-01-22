@@ -5,11 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.ConfigDefaults;
 import com.samsonmedia.barn.execution.ProcessUtils;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
@@ -24,7 +22,7 @@ import picocli.CommandLine.Option;
 )
 public class ServiceRestartCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceRestartCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ServiceRestartCommand.class);
     private static final long DEFAULT_WAIT_SECONDS = 30;
 
     @Option(names = {"--force", "-f"}, description = "Force immediate restart")

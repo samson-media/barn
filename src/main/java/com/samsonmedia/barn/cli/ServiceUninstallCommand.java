@@ -3,10 +3,8 @@ package com.samsonmedia.barn.cli;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.OperatingSystem;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.platform.linux.SystemdManager;
 import com.samsonmedia.barn.platform.macos.LaunchdManager;
 import com.samsonmedia.barn.platform.windows.WindowsServiceManager;
@@ -31,7 +29,7 @@ import picocli.CommandLine.Option;
 )
 public class ServiceUninstallCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceUninstallCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ServiceUninstallCommand.class);
 
     @Option(names = {"--user"}, description = "Uninstall user service instead of system-wide")
     private boolean userService;

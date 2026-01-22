@@ -12,8 +12,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.samsonmedia.barn.logging.BarnLogger;
 
 /**
  * Loads and validates Barn configuration from files and environment variables.
@@ -29,7 +28,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class ConfigLoader {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ConfigLoader.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ConfigLoader.class);
     private static final String ENV_PREFIX = "BARN_";
 
     private final Map<String, String> environment;

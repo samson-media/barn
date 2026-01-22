@@ -5,12 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.samsonmedia.barn.config.Config;
 import com.samsonmedia.barn.config.ConfigDefaults;
 import com.samsonmedia.barn.config.ConfigLoader;
+import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.service.BarnService;
 
 import picocli.CommandLine.Command;
@@ -26,7 +24,7 @@ import picocli.CommandLine.Option;
 )
 public class ServiceStartCommand extends BaseCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceStartCommand.class);
+    private static final BarnLogger LOG = BarnLogger.getLogger(ServiceStartCommand.class);
 
     @Option(names = {"--foreground", "-f"}, description = "Run in foreground (don't daemonize)")
     private boolean foreground;
