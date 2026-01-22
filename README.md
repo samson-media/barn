@@ -155,11 +155,32 @@ barn's output defaults to a human-readable format, but also supports xml or json
 ### Managing the service
 
 There needs to be a barn service in order to run jobs (unless you use --offline). You manage the service using the `barn service` sub command.
-- `barn service status"` - check the status of the service. up/down, process id etc.
-- `barn service start"` - starts barn service process
-- `barn service stop"` - stops/kills the barn service
-- `barn service restart"` - restarts the barn service
-- `barn service reload"` - reloads the configuration and soft restarts the barn service
+- `barn service status` - check the status of the service. up/down, process id etc.
+- `barn service start` - starts barn service process
+- `barn service stop` - stops/kills the barn service
+- `barn service restart` - restarts the barn service
+- `barn service reload` - reloads the configuration and soft restarts the barn service
+
+**Example: `barn service status --output=json`**
+```json
+{
+  "status" : "running",
+  "running" : true,
+  "pid" : 17474,
+  "uptime_seconds" : 16,
+  "started_at" : "2026-01-22T01:48:41.869Z",
+  "jobs" : {
+    "running" : 0,
+    "queued" : 1,
+    "succeeded" : 1,
+    "failed" : 0,
+    "canceled" : 0,
+    "killed" : 0,
+    "total" : 2
+  },
+  "data_dir" : "/tmp/barn"
+}
+```
 
 ### Adding jobs
 
@@ -182,19 +203,92 @@ Users can tag job for the purpose of filtering using the --tag=string CLI option
 
 Developers can use the --offline command line option to test how the service behaves eg creating tmp files etc. This runs the same code as the service but without having to run the service
 
-> barn's output defaults to a human-readable format, but also supports xml or json via the --output={json|xml} cli option.
+**Example: `barn run --output=json -- echo "Hello World"`**
+```json
+{
+  "id" : "job-6d368040",
+  "state" : "QUEUED",
+  "command" : [ "echo", "Hello World" ],
+  "tag" : null,
+  "createdAt" : "2026-01-22T01:48:46.749629Z",
+  "startedAt" : null,
+  "finishedAt" : null,
+  "exitCode" : null,
+  "error" : null,
+  "pid" : null,
+  "heartbeat" : null,
+  "retryCount" : 0,
+  "retryAt" : null,
+  "terminal" : false,
+  "running" : false,
+  "queued" : true
+}
+```
 
 ### Get status of jobs
 
-`bar status` gets the status of all jobs found in /tmp.
+`barn status` gets the status of all jobs found in /tmp.
 
-> barn's output defaults to a human-readable format, but also supports xml or json via the --output={json|xml} cli option.
+**Example: `barn status --output=json`**
+```json
+{
+  "jobs" : [ {
+    "id" : "job-6d368040",
+    "state" : "SUCCEEDED",
+    "command" : [ "echo", "Hello World" ],
+    "tag" : null,
+    "createdAt" : "2026-01-22T01:48:46.739979Z",
+    "startedAt" : "2026-01-22T01:48:47.161895Z",
+    "finishedAt" : "2026-01-22T01:48:47.184605Z",
+    "exitCode" : 0,
+    "error" : null,
+    "pid" : 17486,
+    "heartbeat" : "2026-01-22T01:48:47.161895Z",
+    "retryCount" : 0,
+    "retryAt" : null,
+    "running" : false,
+    "terminal" : true,
+    "queued" : false
+  } ],
+  "summary" : {
+    "total" : 1,
+    "queued" : 0,
+    "running" : 0,
+    "succeeded" : 1,
+    "failed" : 0,
+    "canceled" : 0,
+    "killed" : 0
+  }
+}
+```
 
 
 ### Get Details of a job
 `barn describe {jobId}` - collects all the info from /tmp and display it
 
-> barn's output defaults to a human-readable format, but also supports xml or json via the --output={json|xml} cli option.
+**Example: `barn describe job-6d368040 --output=json`**
+```json
+{
+  "id" : "job-6d368040",
+  "state" : "succeeded",
+  "tag" : null,
+  "command" : [ "echo", "Hello World" ],
+  "createdAt" : "2026-01-22T01:48:46.739979Z",
+  "startedAt" : "2026-01-22T01:48:47.161895Z",
+  "finishedAt" : "2026-01-22T01:48:47.184605Z",
+  "pid" : 17486,
+  "exitCode" : 0,
+  "error" : null,
+  "heartbeat" : "2026-01-22T01:48:47.161895Z",
+  "retryCount" : 0,
+  "retryAt" : null,
+  "paths" : {
+    "jobDir" : "/tmp/barn/jobs/job-6d368040",
+    "workDir" : "/tmp/barn/jobs/job-6d368040/work",
+    "logsDir" : "/tmp/barn/jobs/job-6d368040/logs"
+  }
+}
+```
 
 ---
 
@@ -202,19 +296,8 @@ Developers can use the --offline command line option to test how the service beh
 ### Stop a job
 `barn kill {jobId}` - kills a job process
 
-> barn's output defaults to a human-readable format, but also supports xml or json via the --output={json|xml} cli option.
-
-
-### Stop a job
-`barn kill {jobId}` - kills a job
-
-> barn's output defaults to a human-readable format, but also supports xml or json via the --output={json|xml} cli option.
-
-
 ### Clean up jobs
-`barn clean` - removes completed jobs and cleans up old jobs (older than max_age config) with errors from /tmp
-
-> barn's output defaults to a human-readable format, but also supports xml or json via the --output={json|xml} cli option.
+`barn clean` - removes completed jobs and cleans up old jobs (older than max_age config) from /tmp
 
 
 ## Documentation
