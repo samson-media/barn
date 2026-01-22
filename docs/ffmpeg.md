@@ -35,13 +35,14 @@ Save the `id` field for subsequent commands.
 
 ### Step 2: Poll for Status
 
-Check if the job is still running:
+Check job status with logs:
 
+**Command:**
 ```bash
-barn describe job-cbe3e07f --output=json
+barn describe job-cbe3e07f --logs --output=json
 ```
 
-Response while running:
+**Output (while running):**
 ```json
 {
   "id" : "job-cbe3e07f",
@@ -60,11 +61,15 @@ Response while running:
     "jobDir" : "/tmp/barn/jobs/job-cbe3e07f",
     "workDir" : "/tmp/barn/jobs/job-cbe3e07f/work",
     "logsDir" : "/tmp/barn/jobs/job-cbe3e07f/logs"
+  },
+  "logs" : {
+    "stdout" : "frame=90\nfps=120.5\nspeed=2.5x\nprogress=continue",
+    "stderr" : "ffmpeg version 8.0.1 Copyright (c) 2000-2025 the FFmpeg developers..."
   }
 }
 ```
 
-Response when complete:
+**Output (succeeded):**
 ```json
 {
   "id" : "job-cbe3e07f",
@@ -83,65 +88,29 @@ Response when complete:
     "jobDir" : "/tmp/barn/jobs/job-cbe3e07f",
     "workDir" : "/tmp/barn/jobs/job-cbe3e07f/work",
     "logsDir" : "/tmp/barn/jobs/job-cbe3e07f/logs"
-  }
-}
-```
-
-### Step 3: Get Progress (While Running)
-
-Use `--logs` to include stdout/stderr in the response:
-
-```bash
-barn describe job-cbe3e07f --logs --output=json
-```
-
-Response:
-```json
-{
-  "id" : "job-cbe3e07f",
-  "state" : "running",
-  "pid" : 70923,
-  "exitCode" : null,
-  "paths" : {
-    "jobDir" : "/tmp/barn/jobs/job-cbe3e07f",
-    "workDir" : "/tmp/barn/jobs/job-cbe3e07f/work",
-    "logsDir" : "/tmp/barn/jobs/job-cbe3e07f/logs"
   },
   "logs" : {
-    "stdout" : "frame=90\nfps=0.00\nstream_0_0_q=-1.0\nbitrate=48.9kbits/s\ntotal_size=17935\nout_time_us=2933333\nout_time_ms=2933333\nout_time=00:00:02.933333\ndup_frames=0\ndrop_frames=0\nspeed=94.9x\nprogress=continue",
-    "stderr" : "ffmpeg version 8.0.1 Copyright (c) 2000-2025 the FFmpeg developers..."
+    "stdout" : "frame=9000\nfps=120.5\nspeed=2.5x\nprogress=end",
+    "stderr" : "ffmpeg version 8.0.1...\n[libx264] encoded 9000 frames"
   }
 }
 ```
 
-Parse the `logs.stdout` field to extract progress. Key fields:
-- `frame=N` - current frame number
-- `fps=N` - encoding speed in frames per second
-- `speed=Nx` - encoding speed relative to realtime
-- `out_time=HH:MM:SS` - current output timestamp
-- `bitrate=N` - current bitrate
-- `progress=continue` - job still running
-- `progress=end` - job complete
-
-### Step 4: Handle Completion
-
-Check `state` and `exitCode`:
-
-| State | exitCode | Meaning |
-|-------|----------|---------|
-| `succeeded` | 0 | Job completed successfully |
-| `failed` | non-zero | Job failed (check `error` and `logs.stderr`) |
-| `killed` | null | Job was killed by user |
-
-Example error response:
+**Output (failed):**
 ```json
 {
   "id" : "job-12860505",
   "state" : "failed",
   "command" : [ "ffmpeg", "-y", "-progress", "pipe:1", "-i", "/invalid/path.mkv", "output.mp4" ],
+  "createdAt" : "2026-01-22T10:13:10.999377Z",
+  "startedAt" : "2026-01-22T10:13:11.347945Z",
+  "finishedAt" : "2026-01-22T10:13:11.364657Z",
   "pid" : 70875,
   "exitCode" : 1,
   "error" : "Process exited with code 1",
+  "heartbeat" : "2026-01-22T10:13:11.347945Z",
+  "retryCount" : 0,
+  "retryAt" : null,
   "paths" : {
     "jobDir" : "/tmp/barn/jobs/job-12860505",
     "workDir" : "/tmp/barn/jobs/job-12860505/work",
@@ -153,6 +122,30 @@ Example error response:
   }
 }
 ```
+
+### Understanding the Output
+
+**Key fields to check:**
+
+| Field | Description |
+|-------|-------------|
+| `state` | `queued`, `running`, `succeeded`, `failed`, `killed` |
+| `exitCode` | `0` = success, non-zero = error, `null` = still running |
+| `error` | Human-readable error message (when failed) |
+| `logs.stdout` | FFmpeg progress output (with `-progress pipe:1`) |
+| `logs.stderr` | FFmpeg errors and warnings |
+
+**Progress fields in `logs.stdout`:**
+
+| Field | Description |
+|-------|-------------|
+| `frame=N` | Current frame number |
+| `fps=N` | Encoding speed (frames per second) |
+| `speed=Nx` | Speed relative to realtime (e.g., `2.5x`) |
+| `out_time=HH:MM:SS` | Current output timestamp |
+| `bitrate=N` | Current bitrate |
+| `progress=continue` | Job still running |
+| `progress=end` | Job complete |
 
 ### Step 5: Kill a Running Job (Optional)
 
@@ -181,8 +174,7 @@ barn kill job-cbe3e07f --output=json
 | Step | Command | Key Output Fields |
 |------|---------|-------------------|
 | Submit | `barn run --output=json -- ffmpeg ...` | `id`, `state` |
-| Poll | `barn describe <id> --output=json` | `state`, `exitCode` |
-| Progress | `barn describe <id> --logs --output=json` | `logs.stdout`, `logs.stderr` |
+| Poll | `barn describe <id> --logs --output=json` | `state`, `exitCode`, `logs.stdout`, `logs.stderr` |
 | Kill | `barn kill <id> --output=json` | `state` |
 
 **State values:** `queued` → `running` → `succeeded` / `failed` / `killed`
