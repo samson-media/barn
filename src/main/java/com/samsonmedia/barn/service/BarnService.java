@@ -24,6 +24,7 @@ import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.ipc.IpcServer;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.logging.LoggingConfig;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
 
@@ -87,6 +88,9 @@ public class BarnService {
         if (running.getAndSet(true)) {
             throw new IllegalStateException("Service already running");
         }
+
+        // Enable logging for the service (CLI commands have logging OFF by default)
+        LoggingConfig.setLogLevel(config.service().logLevel());
 
         LOG.info("Starting Barn service");
 

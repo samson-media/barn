@@ -2,18 +2,11 @@
     <!-- Suppress logback's internal status messages -->
     <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
-    <!-- Console appender for development/foreground -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <!-- File appender for daemon mode -->
+    <!-- File appender for service logging -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${BARN_LOG_DIR:-/tmp/barn/logs}/barn.log</file>
+        <file>${BARN_LOG_DIR:-${java.io.tmpdir}/barn/logs}/barn.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${BARN_LOG_DIR:-/tmp/barn/logs}/barn.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${BARN_LOG_DIR:-${java.io.tmpdir}/barn/logs}/barn.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
             <maxHistory>7</maxHistory>
             <totalSizeCap>100MB</totalSizeCap>
@@ -25,9 +18,9 @@
 
     <!-- JSON appender for structured logging -->
     <appender name="JSON" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${BARN_LOG_DIR:-/tmp/barn/logs}/barn.json.log</file>
+        <file>${BARN_LOG_DIR:-${java.io.tmpdir}/barn/logs}/barn.json.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${BARN_LOG_DIR:-/tmp/barn/logs}/barn.json.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${BARN_LOG_DIR:-${java.io.tmpdir}/barn/logs}/barn.json.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxFileSize>10MB</maxFileSize>
             <maxHistory>7</maxHistory>
         </rollingPolicy>
@@ -37,8 +30,11 @@
         </encoder>
     </appender>
 
-    <!-- Log to file only by default (CLI commands). Service foreground mode adds console programmatically -->
-    <root level="${BARN_LOG_LEVEL:-INFO}">
+    <!--
+        Root logger OFF by default - CLI commands produce no log output.
+        Service startup explicitly enables logging via LoggingConfig.
+    -->
+    <root level="OFF">
         <appender-ref ref="FILE"/>
     </root>
 </configuration>
