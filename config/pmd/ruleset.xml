@@ -21,12 +21,6 @@
         <exclude name="JUnit4TestShouldUseTestAnnotation"/>
         <exclude name="JUnit4TestShouldUseBeforeAnnotation"/>
         <exclude name="JUnit4TestShouldUseAfterAnnotation"/>
-        <!-- Allow multiple asserts in unit tests -->
-        <exclude name="UnitTestContainsTooManyAsserts"/>
-        <!-- Some tests verify behavior without explicit assert -->
-        <exclude name="UnitTestShouldIncludeAssert"/>
-        <!-- Guard log statements not needed with SLF4J -->
-        <exclude name="GuardLogStatement"/>
     </rule>
 
     <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod">
@@ -54,16 +48,6 @@
         <exclude name="CommentDefaultAccessModifier"/>
         <!-- Java 21+ has useful implicit classes -->
         <exclude name="UnnecessaryFullyQualifiedName"/>
-        <!-- Test methods with getter-like names are fine -->
-        <exclude name="LinguisticNaming"/>
-        <!-- Local variables don't need final -->
-        <exclude name="LocalVariableCouldBeFinal"/>
-        <!-- Method args don't need final -->
-        <exclude name="MethodArgumentCouldBeFinal"/>
-        <!-- Allow var for local type inference -->
-        <exclude name="UseExplicitTypes"/>
-        <!-- Locale not needed for internal identifiers -->
-        <exclude name="UseLocaleWithCaseConversions"/>
     </rule>
 
     <rule ref="category/java/codestyle.xml/ClassNamingConventions">
@@ -76,11 +60,8 @@
         <properties>
             <property name="methodPattern" value="[a-z][a-zA-Z0-9]*"/>
             <property name="nativePattern" value="[a-z][a-zA-Z0-9]*"/>
-            <!-- Allow underscores in JUnit 5 test methods for BDD naming -->
-            <property name="junit5TestPattern" value="[a-z][a-zA-Z0-9_]*"/>
         </properties>
     </rule>
-
 
     <!-- ================================================================== -->
     <!-- DESIGN                                                             -->
@@ -99,12 +80,6 @@
         <exclude name="ExcessiveClassLength"/>
         <!-- Too strict for modern patterns -->
         <exclude name="AvoidCatchingGenericException"/>
-        <!-- CognitiveComplexity too strict -->
-        <exclude name="CognitiveComplexity"/>
-        <!-- Singular fields are sometimes intentional -->
-        <exclude name="SingularField"/>
-        <!-- Simplify boolean returns - sometimes explicit is clearer -->
-        <exclude name="SimplifyBooleanReturns"/>
     </rule>
 
     <rule ref="category/java/design.xml/CyclomaticComplexity">
@@ -148,18 +123,13 @@
         <exclude name="BeanMembersShouldSerialize"/>
         <!-- Too strict -->
         <exclude name="DataflowAnomalyAnalysis"/>
-        <!-- String constants in tests are fine -->
-        <exclude name="AvoidDuplicateLiterals"/>
-        <!-- Underscores in numeric literals not required -->
-        <exclude name="UseUnderscoresInNumericLiterals"/>
-        <!-- Instanceof in catch is sometimes needed -->
-        <exclude name="AvoidInstanceofChecksInCatchClause"/>
-        <!-- Assignment in operand is sometimes cleaner -->
-        <exclude name="AssignmentInOperand"/>
-        <!-- Stack trace is preserved when needed -->
-        <exclude name="PreserveStackTrace"/>
-        <!-- Literals in if conditions are readable -->
-        <exclude name="AvoidLiteralsInIfCondition"/>
+    </rule>
+
+    <rule ref="category/java/errorprone.xml/AvoidLiteralsInIfCondition">
+        <properties>
+            <property name="ignoreMagicNumbers" value="-1,0,1,2"/>
+            <property name="ignoreExpressions" value="true"/>
+        </properties>
     </rule>
 
     <!-- ================================================================== -->
@@ -179,11 +149,6 @@
     <rule ref="category/java/performance.xml">
         <!-- Modern JVM handles this well -->
         <exclude name="AvoidInstantiatingObjectsInLoops"/>
-        <!-- StringBuilder micro-optimizations not needed -->
-        <exclude name="ConsecutiveAppendsShouldReuse"/>
-        <exclude name="ConsecutiveLiteralAppends"/>
-        <exclude name="AppendCharacterWithChar"/>
-        <exclude name="InsufficientStringBufferDeclaration"/>
     </rule>
 
     <!-- ================================================================== -->

@@ -29,45 +29,8 @@
         <Or>
             <Class name="~.*ProcessExecutor.*"/>
             <Class name="~.*CommandRunner.*"/>
-            <Class name="~.*ServiceManager.*"/>
-            <Class name="~.*WindowsServiceManager.*"/>
-            <Class name="~.*SystemdManager.*"/>
-            <Class name="~.*LaunchdManager.*"/>
-            <Class name="~.*UsageCollector.*"/>
         </Or>
         <Bug pattern="COMMAND_INJECTION"/>
-    </Match>
-
-    <!-- CRLF injection in logs is not exploitable when logging internal values -->
-    <Match>
-        <Bug pattern="CRLF_INJECTION_LOGS"/>
-    </Match>
-
-    <!-- Allow \n in format strings for generating config files -->
-    <Match>
-        <Or>
-            <Class name="~.*LaunchdManager.*"/>
-            <Class name="~.*SystemdManager.*"/>
-        </Or>
-        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
-    </Match>
-
-    <!-- Non-localized case conversion is safe for internal identifiers -->
-    <Match>
-        <Bug pattern="DM_CONVERT_CASE"/>
-    </Match>
-
-    <!-- Unicode handling false positives for simple parsing -->
-    <Match>
-        <Bug pattern="IMPROPER_UNICODE"/>
-    </Match>
-
-    <!-- Allow exposing internal representation for data classes -->
-    <Match>
-        <Bug pattern="EI_EXPOSE_REP"/>
-    </Match>
-    <Match>
-        <Bug pattern="EI_EXPOSE_REP2"/>
     </Match>
 
     <!-- Exclude false positives for try-with-resources -->
@@ -81,70 +44,6 @@
         <Not>
             <Class name="~.*Exception"/>
         </Not>
-    </Match>
-
-    <!-- XML formatting with internal data is safe -->
-    <Match>
-        <Class name="~.*XmlFormatter.*"/>
-        <Bug pattern="POTENTIAL_XML_INJECTION"/>
-    </Match>
-
-    <!-- Catching Exception is intentional for resilience -->
-    <Match>
-        <Bug pattern="REC_CATCH_EXCEPTION"/>
-    </Match>
-
-    <!-- Using TEMP env var is intentional for Windows compatibility -->
-    <Match>
-        <Class name="~.*ConfigDefaults.*"/>
-        <Bug pattern="ENV_USE_PROPERTY_INSTEAD_OF_ENV"/>
-    </Match>
-
-    <!-- Lazy init of static field is acceptable for OS detection -->
-    <Match>
-        <Class name="~.*OperatingSystem.*"/>
-        <Bug pattern="LI_LAZY_INIT_STATIC"/>
-    </Match>
-
-    <!-- Constructor throws are acceptable for validation -->
-    <Match>
-        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
-    </Match>
-
-    <!-- Null checks - these are handled or acceptable -->
-    <Match>
-        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
-    </Match>
-
-    <!-- Ignoring executor submit return value is intentional -->
-    <Match>
-        <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"/>
-    </Match>
-
-    <!-- Stream handling in IPC is managed correctly -->
-    <Match>
-        <Or>
-            <Class name="~.*IpcClient.*"/>
-            <Class name="~.*IpcServer.*"/>
-        </Or>
-        <Bug pattern="OS_OPEN_STREAM"/>
-    </Match>
-
-    <!-- ThreadLocalRandom is fine for jitter, not crypto -->
-    <Match>
-        <Class name="~.*RetryCalculator.*"/>
-        <Bug pattern="PREDICTABLE_RANDOM"/>
-    </Match>
-
-    <!-- Default encoding in UsageCollector is acceptable -->
-    <Match>
-        <Class name="~.*UsageCollector.*"/>
-        <Bug pattern="DM_DEFAULT_ENCODING"/>
-    </Match>
-
-    <!-- Throwing RuntimeException is intentional -->
-    <Match>
-        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
     </Match>
 
 </FindBugsFilter>
