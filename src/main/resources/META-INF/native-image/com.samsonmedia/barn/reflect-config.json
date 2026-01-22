@@ -1,5 +1,10 @@
 [
   {
+    "name": "com.samsonmedia.barn.cli.VersionProvider",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
     "name": "ch.qos.logback.core.status.NopStatusListener",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true

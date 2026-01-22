@@ -2,6 +2,7 @@
   "resources": {
     "includes": [
       {"pattern": "logback.xml"},
+      {"pattern": "version.properties"},
       {"pattern": "META-INF/.*"}
     ]
   },

@@ -6,7 +6,7 @@
 
     <groupId>com.samsonmedia</groupId>
     <artifactId>barn</artifactId>
-    <version>0.1.5</version>
+    <version>0.1.6</version>
     <packaging>jar</packaging>
 
     <name>Barn</name>
@@ -121,6 +121,22 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>version.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>version.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <!-- Compiler -->
             <plugin>

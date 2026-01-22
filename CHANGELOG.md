@@ -5,13 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.1.5] - 2026-01-22
+## [0.1.6] - 2026-01-22
 
 ### Added
 - Intel Mac (x86_64) support
 
 ### Fixed
 - Homebrew tap now auto-updates on release
+- Version string now matches release tag
+
+## [0.1.5] - 2026-01-22
+
+### Fixed
+- Version string was hardcoded (broken release)
 
 ## [0.1.4] - 2026-01-22
 
@@ -56,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Jobs that fail to start now properly transition to FAILED state
 - Startup errors are written to stderr.log for visibility
 
+[0.1.6]: https://github.com/samson-media/barn/releases/tag/v0.1.6
 [0.1.5]: https://github.com/samson-media/barn/releases/tag/v0.1.5
 [0.1.4]: https://github.com/samson-media/barn/releases/tag/v0.1.4
 [0.1.3]: https://github.com/samson-media/barn/releases/tag/v0.1.3
