@@ -28,11 +28,13 @@ public final class ConfigDefaults {
     /**
      * Gets the default IPC socket path.
      *
+     * <p>Windows 10 version 1803+ supports Unix domain sockets with file paths.
+     *
      * @return the default IPC socket path
      */
     public static Path getDefaultIpcSocket() {
         return switch (OperatingSystem.current()) {
-            case WINDOWS -> Path.of("\\\\.\\pipe\\barn");
+            case WINDOWS -> Path.of(System.getenv("TEMP"), "barn", "barn.sock");
             case LINUX, MACOS -> Path.of("/tmp/barn/barn.sock");
         };
     }
