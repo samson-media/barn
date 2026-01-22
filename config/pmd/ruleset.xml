@@ -9,6 +9,9 @@
         Based on PMD best practices with adjustments for modern Java.
     </description>
 
+    <!-- Exclude test files - test code has different style requirements -->
+    <exclude-pattern>.*/src/test/.*</exclude-pattern>
+
     <!-- ================================================================== -->
     <!-- BEST PRACTICES                                                     -->
     <!-- ================================================================== -->
@@ -48,12 +51,6 @@
         <exclude name="CommentDefaultAccessModifier"/>
         <!-- Java 21+ has useful implicit classes -->
         <exclude name="UnnecessaryFullyQualifiedName"/>
-        <!-- Final local vars are a style preference, not a bug -->
-        <exclude name="LocalVariableCouldBeFinal"/>
-        <!-- Final method args are a style preference -->
-        <exclude name="MethodArgumentCouldBeFinal"/>
-        <!-- Getter-like test names (getX_shouldY) are fine -->
-        <exclude name="LinguisticNaming"/>
     </rule>
 
     <rule ref="category/java/codestyle.xml/ClassNamingConventions">
@@ -66,11 +63,8 @@
         <properties>
             <property name="methodPattern" value="[a-z][a-zA-Z0-9]*"/>
             <property name="nativePattern" value="[a-z][a-zA-Z0-9]*"/>
-            <!-- Allow underscores in JUnit 5 test method names (BDD style: method_condition_result) -->
-            <property name="junit5TestPattern" value="[a-z][a-zA-Z0-9_]*"/>
         </properties>
     </rule>
-
 
     <!-- ================================================================== -->
     <!-- DESIGN                                                             -->
@@ -132,8 +126,6 @@
         <exclude name="BeanMembersShouldSerialize"/>
         <!-- Too strict -->
         <exclude name="DataflowAnomalyAnalysis"/>
-        <!-- Underscores in numeric literals optional for small numbers -->
-        <exclude name="UseUnderscoresInNumericLiterals"/>
     </rule>
 
     <rule ref="category/java/errorprone.xml/AvoidLiteralsInIfCondition">
