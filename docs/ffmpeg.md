@@ -15,12 +15,19 @@ barn run --output=json -- ffmpeg -y -progress pipe:1 -threads 0 -i input.mkv -c:
 Response:
 ```json
 {
-  "id": "job-a1b2c3d4",
-  "state": "queued",
-  "command": ["ffmpeg", "-y", "-progress", "pipe:1", "-threads", "0", "-i", "input.mkv", "-c:v", "libx264", "output.mp4"],
-  "createdAt": "2026-01-22T10:00:00.000Z",
-  "pid": null,
-  "exitCode": null
+  "id" : "job-cbe3e07f",
+  "state" : "QUEUED",
+  "command" : [ "ffmpeg", "-y", "-progress", "pipe:1", "-threads", "0", "-i", "input.mkv", "-c:v", "libx264", "output.mp4" ],
+  "tag" : null,
+  "createdAt" : "2026-01-22T10:13:34.121846Z",
+  "startedAt" : null,
+  "finishedAt" : null,
+  "exitCode" : null,
+  "error" : null,
+  "pid" : null,
+  "heartbeat" : null,
+  "retryCount" : 0,
+  "retryAt" : null
 }
 ```
 
@@ -31,30 +38,52 @@ Save the `id` field for subsequent commands.
 Check if the job is still running:
 
 ```bash
-barn describe job-a1b2c3d4 --output=json
+barn describe job-cbe3e07f --output=json
 ```
 
 Response while running:
 ```json
 {
-  "id": "job-a1b2c3d4",
-  "state": "running",
-  "pid": 12345,
-  "exitCode": null,
-  "startedAt": "2026-01-22T10:00:01.000Z",
-  "finishedAt": null
+  "id" : "job-cbe3e07f",
+  "state" : "running",
+  "command" : [ "ffmpeg", "-y", "-progress", "pipe:1", "-threads", "0", "-i", "input.mkv", "-c:v", "libx264", "output.mp4" ],
+  "createdAt" : "2026-01-22T10:13:34.121180Z",
+  "startedAt" : "2026-01-22T10:13:34.347543Z",
+  "finishedAt" : null,
+  "pid" : 70923,
+  "exitCode" : null,
+  "error" : null,
+  "heartbeat" : "2026-01-22T10:13:34.347543Z",
+  "retryCount" : 0,
+  "retryAt" : null,
+  "paths" : {
+    "jobDir" : "/tmp/barn/jobs/job-cbe3e07f",
+    "workDir" : "/tmp/barn/jobs/job-cbe3e07f/work",
+    "logsDir" : "/tmp/barn/jobs/job-cbe3e07f/logs"
+  }
 }
 ```
 
 Response when complete:
 ```json
 {
-  "id": "job-a1b2c3d4",
-  "state": "succeeded",
-  "pid": 12345,
-  "exitCode": 0,
-  "startedAt": "2026-01-22T10:00:01.000Z",
-  "finishedAt": "2026-01-22T10:05:30.000Z"
+  "id" : "job-cbe3e07f",
+  "state" : "succeeded",
+  "command" : [ "ffmpeg", "-y", "-progress", "pipe:1", "-threads", "0", "-i", "input.mkv", "-c:v", "libx264", "output.mp4" ],
+  "createdAt" : "2026-01-22T10:13:34.121180Z",
+  "startedAt" : "2026-01-22T10:13:34.347543Z",
+  "finishedAt" : "2026-01-22T10:13:34.394959Z",
+  "pid" : 70923,
+  "exitCode" : 0,
+  "error" : null,
+  "heartbeat" : "2026-01-22T10:13:34.347543Z",
+  "retryCount" : 0,
+  "retryAt" : null,
+  "paths" : {
+    "jobDir" : "/tmp/barn/jobs/job-cbe3e07f",
+    "workDir" : "/tmp/barn/jobs/job-cbe3e07f/work",
+    "logsDir" : "/tmp/barn/jobs/job-cbe3e07f/logs"
+  }
 }
 ```
 
@@ -63,27 +92,36 @@ Response when complete:
 Use `--logs` to include stdout/stderr in the response:
 
 ```bash
-barn describe job-a1b2c3d4 --logs --output=json
+barn describe job-cbe3e07f --logs --output=json
 ```
 
 Response:
 ```json
 {
-  "id": "job-a1b2c3d4",
-  "state": "running",
-  "logs": {
-    "stdout": "frame=5000\nfps=120.5\nspeed=2.5x\nprogress=continue\n",
-    "stderr": "ffmpeg version 7.0..."
+  "id" : "job-cbe3e07f",
+  "state" : "running",
+  "pid" : 70923,
+  "exitCode" : null,
+  "paths" : {
+    "jobDir" : "/tmp/barn/jobs/job-cbe3e07f",
+    "workDir" : "/tmp/barn/jobs/job-cbe3e07f/work",
+    "logsDir" : "/tmp/barn/jobs/job-cbe3e07f/logs"
+  },
+  "logs" : {
+    "stdout" : "frame=90\nfps=0.00\nstream_0_0_q=-1.0\nbitrate=48.9kbits/s\ntotal_size=17935\nout_time_us=2933333\nout_time_ms=2933333\nout_time=00:00:02.933333\ndup_frames=0\ndrop_frames=0\nspeed=94.9x\nprogress=continue",
+    "stderr" : "ffmpeg version 8.0.1 Copyright (c) 2000-2025 the FFmpeg developers..."
   }
 }
 ```
 
-Parse the `logs.stdout` field to extract progress. Look for:
+Parse the `logs.stdout` field to extract progress. Key fields:
 - `frame=N` - current frame number
 - `fps=N` - encoding speed in frames per second
 - `speed=Nx` - encoding speed relative to realtime
 - `out_time=HH:MM:SS` - current output timestamp
-- `progress=continue` or `progress=end`
+- `bitrate=N` - current bitrate
+- `progress=continue` - job still running
+- `progress=end` - job complete
 
 ### Step 4: Handle Completion
 
@@ -98,13 +136,20 @@ Check `state` and `exitCode`:
 Example error response:
 ```json
 {
-  "id": "job-a1b2c3d4",
-  "state": "failed",
-  "exitCode": 1,
-  "error": "Process exited with code 1",
-  "logs": {
-    "stdout": "",
-    "stderr": "input.mkv: No such file or directory"
+  "id" : "job-12860505",
+  "state" : "failed",
+  "command" : [ "ffmpeg", "-y", "-progress", "pipe:1", "-i", "/invalid/path.mkv", "output.mp4" ],
+  "pid" : 70875,
+  "exitCode" : 1,
+  "error" : "Process exited with code 1",
+  "paths" : {
+    "jobDir" : "/tmp/barn/jobs/job-12860505",
+    "workDir" : "/tmp/barn/jobs/job-12860505/work",
+    "logsDir" : "/tmp/barn/jobs/job-12860505/logs"
+  },
+  "logs" : {
+    "stdout" : "",
+    "stderr" : "ffmpeg version 8.0.1...\n/invalid/path.mkv: No such file or directory"
   }
 }
 ```
