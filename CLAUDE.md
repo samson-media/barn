@@ -610,6 +610,174 @@ mvn compile spotbugs:gui
 
 ---
 
+## Pre-Release Testing Checklist (MANDATORY)
+
+Before creating ANY release tag, you MUST test ALL subcommands with the native binary locally.
+
+### Prerequisites
+
+1. **Build the native image locally:**
+   ```bash
+   export JAVA_HOME="/Library/Java/JavaVirtualMachines/graalvm-25.jdk/Contents/Home"
+   mvn package -Pnative -DskipTests -Dspotbugs.skip=true -Dpmd.skip=true -Dcheckstyle.skip=true -Djacoco.skip=true
+   ```
+
+2. **Verify the binary exists:**
+   ```bash
+   ls -la target/barn
+   ```
+
+### Test Every Subcommand
+
+Run each command and verify the expected output. **Do NOT skip any command.**
+
+#### Basic Commands
+```bash
+# Should show usage/help
+./target/barn
+# Expected: Shows "Usage: barn [-hV] [COMMAND]" and lists all subcommands
+
+./target/barn --help
+# Expected: Same as above
+
+./target/barn --version
+# Expected: Shows "barn X.Y.Z"
+```
+
+#### Service Commands (Start service first)
+```bash
+# Stop any existing service
+./target/barn service stop 2>/dev/null || true
+
+# Start the service
+./target/barn service start
+# Expected: "Barn service started (PID: XXXXX)"
+
+# Check service status
+./target/barn service status
+# Expected: Shows "Status: running", PID, uptime, job counts
+
+# Test reload (reloads config without restart)
+./target/barn service reload
+# Expected: "Configuration reloaded"
+
+# View logs
+./target/barn service logs
+# Expected: Shows recent log entries or "No logs found"
+
+# Restart the service
+./target/barn service restart
+# Expected: "Barn service restarted"
+```
+
+#### Job Commands (Service must be running)
+```bash
+# Run a test job
+./target/barn run -- echo "test from native binary"
+# Expected: "Job created: job-XXXXXXXX" with state: queued
+
+# Wait a moment, then check status
+sleep 2
+./target/barn status
+# Expected: Shows table with jobs, including the new job as "succeeded"
+
+# Get the job ID from status output, then describe it
+./target/barn describe <job-id>
+# Expected: Shows detailed job info including timestamps, exit code, files
+
+# Check resource usage
+./target/barn usage <job-id>
+# Expected: Shows CPU/memory/disk usage samples
+
+# Test kill on a non-running job (should fail gracefully)
+./target/barn kill <job-id>
+# Expected: "Error: Job is not running: SUCCEEDED"
+
+# Clean with dry-run
+./target/barn clean --dry-run
+# Expected: "Would clean X jobs:" followed by list
+```
+
+#### Config Commands
+```bash
+./target/barn config show
+# Expected: Shows configuration with all sections (service, jobs, cleanup, storage)
+```
+
+#### Autocompletion Commands
+```bash
+./target/barn autocompletion --bash | head -5
+# Expected: Shows bash completion script starting with "#!/usr/bin/env bash"
+
+./target/barn autocompletion --zsh | head -5
+# Expected: Shows zsh completion script
+```
+
+#### Service Stop (Clean up)
+```bash
+./target/barn service stop
+# Expected: "Barn service stopped"
+
+./target/barn service status
+# Expected: "Barn service is not running"
+```
+
+### Checklist Summary
+
+Copy this checklist and verify each item:
+
+```markdown
+## Pre-Release Testing for vX.Y.Z
+
+### Build
+- [ ] Native image builds successfully
+- [ ] Binary exists at target/barn
+
+### Basic Commands
+- [ ] `barn` shows help
+- [ ] `barn --help` shows help
+- [ ] `barn --version` shows correct version
+
+### Service Commands
+- [ ] `barn service start` starts the service
+- [ ] `barn service status` shows running status
+- [ ] `barn service reload` reloads config
+- [ ] `barn service logs` shows logs
+- [ ] `barn service restart` restarts cleanly
+- [ ] `barn service stop` stops the service
+
+### Job Commands (with service running)
+- [ ] `barn run -- echo test` creates a job
+- [ ] `barn status` shows job list
+- [ ] `barn describe <id>` shows job details
+- [ ] `barn usage <id>` shows resource usage
+- [ ] `barn kill <id>` handles non-running job gracefully
+- [ ] `barn clean --dry-run` shows what would be cleaned
+
+### Config Commands
+- [ ] `barn config show` displays configuration
+
+### Autocompletion
+- [ ] `barn autocompletion --bash` generates bash script
+- [ ] `barn autocompletion --zsh` generates zsh script
+
+### Final
+- [ ] All commands return expected output
+- [ ] No crashes or exceptions
+- [ ] Service starts and stops cleanly
+```
+
+### Only After All Tests Pass
+
+1. Commit any fixes
+2. Push to main
+3. Wait for CI to pass
+4. Create the release tag: `git tag vX.Y.Z && git push origin vX.Y.Z`
+
+**NEVER create a release tag without completing this checklist.**
+
+---
+
 ## Questions to Ask Before Implementing
 
 1. Have I read the relevant documentation?
