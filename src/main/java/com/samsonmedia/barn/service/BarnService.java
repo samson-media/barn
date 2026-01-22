@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -263,7 +264,7 @@ public class BarnService {
             tag = (String) map.get("tag");
             String stateStr = (String) map.get("state");
             if (stateStr != null) {
-                state = JobState.valueOf(stateStr.toUpperCase());
+                state = JobState.valueOf(stateStr.toUpperCase(Locale.ROOT));
             }
             limit = (Integer) map.get("limit");
         }

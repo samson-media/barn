@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -159,8 +160,8 @@ public final class ConfigLoader {
                 continue;
             }
 
-            String section = remainder.substring(0, underscoreIndex).toLowerCase();
-            String configKey = remainder.substring(underscoreIndex + 1).toLowerCase();
+            String section = remainder.substring(0, underscoreIndex).toLowerCase(Locale.ROOT);
+            String configKey = remainder.substring(underscoreIndex + 1).toLowerCase(Locale.ROOT);
 
             LOG.debug("Applying environment override: {}={}", key, value);
             data.computeIfAbsent(section, k -> new HashMap<>())

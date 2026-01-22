@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +33,7 @@ public class UsageCollector {
      * Creates a new UsageCollector.
      */
     public UsageCollector() {
-        String os = System.getProperty("os.name").toLowerCase();
+        String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
         this.isWindows = os.contains("win");
         this.isMac = os.contains("mac");
         this.isLinux = os.contains("linux");

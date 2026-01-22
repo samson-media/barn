@@ -3,6 +3,7 @@ package com.samsonmedia.barn.cli;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -49,7 +50,7 @@ public class ServiceReloadCommand extends BaseCommand {
             }
 
             try (IpcClient client = new IpcClient(socketPath)) {
-                String result = client.send("reload", null, String.class);
+                client.send("reload", null, String.class);
                 getOut().println("Configuration reloaded");
                 return EXIT_SUCCESS;
 
@@ -75,7 +76,7 @@ public class ServiceReloadCommand extends BaseCommand {
         long pid = Long.parseLong(pidStr);
 
         // On Unix, we can send SIGHUP. On Windows, this won't work.
-        String os = System.getProperty("os.name").toLowerCase();
+        String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
         if (os.contains("windows")) {
             outputError("Reload via signal not supported on Windows. IPC socket required.");
             return EXIT_ERROR;

@@ -1,6 +1,7 @@
 package com.samsonmedia.barn.util;
 
 import java.time.Duration;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,7 +46,7 @@ public final class DurationParser {
         }
 
         long value = Long.parseLong(matcher.group(1));
-        String unit = matcher.group(2).toLowerCase();
+        String unit = matcher.group(2).toLowerCase(Locale.ROOT);
 
         if (value <= 0) {
             throw new IllegalArgumentException("Duration value must be positive: " + value);

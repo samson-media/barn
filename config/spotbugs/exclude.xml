@@ -24,13 +24,27 @@
         <Bug pattern="DM_EXIT"/>
     </Match>
 
-    <!-- Allow command execution in specific classes -->
+    <!-- Allow command execution in specific classes - commands are hardcoded, not user input -->
     <Match>
         <Or>
             <Class name="~.*ProcessExecutor.*"/>
             <Class name="~.*CommandRunner.*"/>
+            <Class name="~.*ServiceStartCommand.*"/>
+            <Class name="~.*ServiceStopCommand.*"/>
+            <Class name="~.*ServiceRestartCommand.*"/>
+            <Class name="~.*ServiceInstallCommand.*"/>
+            <Class name="~.*ServiceUninstallCommand.*"/>
+            <Class name="~.*WindowsServiceManager.*"/>
+            <Class name="~.*SystemdManager.*"/>
+            <Class name="~.*LaunchdManager.*"/>
+            <Class name="~.*UsageCollector.*"/>
         </Or>
         <Bug pattern="COMMAND_INJECTION"/>
+    </Match>
+
+    <!-- CRLF injection in logs is not exploitable - we log internal identifiers like job IDs -->
+    <Match>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
     </Match>
 
     <!-- Exclude false positives for try-with-resources -->

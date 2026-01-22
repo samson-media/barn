@@ -1,5 +1,7 @@
 package com.samsonmedia.barn.state;
 
+import java.util.Locale;
+
 /**
  * Represents the current state of a job in its lifecycle.
  */
@@ -34,7 +36,7 @@ public enum JobState {
             throw new IllegalArgumentException("Job state cannot be null or blank");
         }
         try {
-            return valueOf(value.trim().toUpperCase());
+            return valueOf(value.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid job state: '" + value
                 + "'. Valid values are: queued, running, succeeded, failed, canceled, killed");
@@ -47,7 +49,7 @@ public enum JobState {
      * @return the state name in lowercase
      */
     public String toLowercase() {
-        return name().toLowerCase();
+        return name().toLowerCase(Locale.ROOT);
     }
 
     /**

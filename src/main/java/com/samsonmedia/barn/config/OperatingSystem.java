@@ -1,5 +1,7 @@
 package com.samsonmedia.barn.config;
 
+import java.util.Locale;
+
 /**
  * Represents the operating system Barn is running on.
  */
@@ -23,7 +25,7 @@ public enum OperatingSystem {
     }
 
     private static OperatingSystem detect() {
-        String osName = System.getProperty("os.name", "").toLowerCase();
+        String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
         if (osName.contains("win")) {
             return WINDOWS;
         } else if (osName.contains("mac") || osName.contains("darwin")) {

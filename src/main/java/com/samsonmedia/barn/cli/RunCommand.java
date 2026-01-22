@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -190,7 +191,7 @@ public class RunCommand extends BaseCommand {
         sb.append("Job created: ").append(job.id()).append("\n");
         sb.append("  Command: ").append(String.join(" ", job.command())).append("\n");
         sb.append("  Tag: ").append(job.tag() != null ? job.tag() : "-").append("\n");
-        sb.append("  State: ").append(job.state().toString().toLowerCase());
+        sb.append("  State: ").append(job.state().toString().toLowerCase(Locale.ROOT));
 
         getOut().println(sb.toString());
     }

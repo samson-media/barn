@@ -155,8 +155,7 @@ public class ServiceStatusCommand extends BaseCommand {
 
         switch (format) {
             case HUMAN -> outputHumanFormat(status);
-            case JSON -> output(status.toMap());
-            case XML -> output(status.toMap());
+            case JSON, XML -> output(status.toMap());
             default -> outputHumanFormat(status);
         }
     }

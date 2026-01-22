@@ -1,5 +1,7 @@
 package com.samsonmedia.barn.config;
 
+import java.util.Locale;
+
 /**
  * Log level for the Barn service.
  */
@@ -21,7 +23,7 @@ public enum LogLevel {
             throw new IllegalArgumentException("Log level cannot be null or blank");
         }
         try {
-            return valueOf(value.trim().toUpperCase());
+            return valueOf(value.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(
                 "Invalid log level: '" + value + "'. Valid values are: debug, info, warn, error");

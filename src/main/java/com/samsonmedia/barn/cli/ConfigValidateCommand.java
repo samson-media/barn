@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -225,7 +226,7 @@ public class ConfigValidateCommand extends BaseCommand {
         if (section.containsKey(key)) {
             Object value = section.get(key);
             if (!(value instanceof Boolean)) {
-                String strValue = value.toString().toLowerCase();
+                String strValue = value.toString().toLowerCase(Locale.ROOT);
                 if (!strValue.equals("true") && !strValue.equals("false")) {
                     errors.add(new ValidationError(0, key,
                         "Invalid value for '" + key + "': must be true or false"));

@@ -3,6 +3,7 @@ package com.samsonmedia.barn.cli;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,8 +50,7 @@ public class ConfigShowCommand extends BaseCommand {
 
             switch (format) {
                 case HUMAN -> outputHumanFormat(config, effectiveConfigFile);
-                case JSON -> output(toMap(config));
-                case XML -> output(toMap(config));
+                case JSON, XML -> output(toMap(config));
                 default -> outputHumanFormat(config, effectiveConfigFile);
             }
 
@@ -90,7 +90,7 @@ public class ConfigShowCommand extends BaseCommand {
 
         // Service section
         sb.append("[service]\n");
-        sb.append(String.format("log_level = %s%n", config.service().logLevel().toString().toLowerCase()));
+        sb.append(String.format("log_level = %s%n", config.service().logLevel().toString().toLowerCase(Locale.ROOT)));
         sb.append(String.format("max_concurrent_jobs = %d%n", config.service().maxConcurrentJobs()));
         sb.append(String.format("heartbeat_interval_seconds = %d%n", config.service().heartbeatIntervalSeconds()));
         sb.append(String.format("ipc_socket = %s%n", config.service().ipcSocket()));
@@ -136,7 +136,7 @@ public class ConfigShowCommand extends BaseCommand {
 
     private Map<String, Object> buildServiceSection(Config config) {
         Map<String, Object> service = new LinkedHashMap<>();
-        service.put("log_level", config.service().logLevel().toString().toLowerCase());
+        service.put("log_level", config.service().logLevel().toString().toLowerCase(Locale.ROOT));
         service.put("max_concurrent_jobs", config.service().maxConcurrentJobs());
         service.put("heartbeat_interval_seconds", config.service().heartbeatIntervalSeconds());
         service.put("ipc_socket", config.service().ipcSocket().toString());

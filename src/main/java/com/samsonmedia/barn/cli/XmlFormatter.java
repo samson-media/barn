@@ -3,6 +3,7 @@ package com.samsonmedia.barn.cli;
 import java.lang.reflect.RecordComponent;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.samsonmedia.barn.jobs.Job;
@@ -92,7 +93,7 @@ public class XmlFormatter implements OutputFormatter {
 
         sb.append(indent).append("<job>\n");
         sb.append(childIndent).append("<id>").append(escapeXml(job.id())).append("</id>\n");
-        sb.append(childIndent).append("<state>").append(job.state().toString().toLowerCase())
+        sb.append(childIndent).append("<state>").append(job.state().toString().toLowerCase(Locale.ROOT))
             .append("</state>\n");
 
         // Command as nested elements

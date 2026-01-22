@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -203,7 +204,7 @@ public class StatusCommand extends BaseCommand {
         for (Job job : jobs) {
             sb.append(String.format("%-" + idWidth + "s  %-9s  %-" + tagWidth + "s  %-19s  %-4s  %-8s%n",
                 job.id(),
-                job.state().toString().toLowerCase(),
+                job.state().toString().toLowerCase(Locale.ROOT),
                 job.tag() != null ? job.tag() : "-",
                 formatTimestamp(job.createdAt()),
                 job.exitCode() != null ? job.exitCode().toString() : "-",
@@ -262,7 +263,7 @@ public class StatusCommand extends BaseCommand {
                     if (!first) {
                         summary.append(", ");
                     }
-                    summary.append(count).append(" ").append(s.toString().toLowerCase());
+                    summary.append(count).append(" ").append(s.toString().toLowerCase(Locale.ROOT));
                     first = false;
                 }
             }
@@ -280,7 +281,7 @@ public class StatusCommand extends BaseCommand {
         summary.put("total", jobs.size());
 
         for (JobState s : JobState.values()) {
-            summary.put(s.toString().toLowerCase(), counts.getOrDefault(s, 0L));
+            summary.put(s.toString().toLowerCase(Locale.ROOT), counts.getOrDefault(s, 0L));
         }
 
         return summary;

@@ -3,6 +3,7 @@ package com.samsonmedia.barn.cli;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import com.samsonmedia.barn.config.CleanupConfig;
 import com.samsonmedia.barn.config.ConfigDefaults;
@@ -71,7 +72,7 @@ public class ConfigInitCommand extends BaseCommand {
         sb.append("[service]\n");
         sb.append("# Logging verbosity: debug, info, warn, error\n");
         sb.append(String.format("log_level = \"%s\"%n",
-            ServiceConfig.DEFAULT_LOG_LEVEL.toString().toLowerCase()));
+            ServiceConfig.DEFAULT_LOG_LEVEL.toString().toLowerCase(Locale.ROOT)));
         sb.append("\n");
         sb.append("# Maximum jobs running simultaneously\n");
         sb.append(String.format("max_concurrent_jobs = %d%n", ServiceConfig.DEFAULT_MAX_CONCURRENT_JOBS));

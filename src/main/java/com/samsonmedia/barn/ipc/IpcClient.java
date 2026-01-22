@@ -12,6 +12,7 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -177,7 +178,7 @@ public class IpcClient implements AutoCloseable {
      * @return the default socket path
      */
     public static Path getDefaultSocketPath() {
-        String os = System.getProperty("os.name").toLowerCase();
+        String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
         if (os.contains("win")) {
             // Windows - use temp directory (named pipes require JNI)
             return Path.of(System.getProperty("java.io.tmpdir"), "barn", "barn.sock");

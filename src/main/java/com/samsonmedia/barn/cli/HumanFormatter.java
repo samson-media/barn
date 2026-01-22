@@ -5,6 +5,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.samsonmedia.barn.jobs.Job;
@@ -145,7 +146,7 @@ public class HumanFormatter implements OutputFormatter {
         for (Job job : jobs) {
             rows.add(List.of(
                 job.id(),
-                job.state().toString().toLowerCase(),
+                job.state().toString().toLowerCase(Locale.ROOT),
                 job.tag() != null ? job.tag() : "-",
                 formatTimestamp(job.createdAt()),
                 job.exitCode() != null ? job.exitCode().toString() : "-"
@@ -229,7 +230,7 @@ public class HumanFormatter implements OutputFormatter {
     }
 
     private String colorizeState(JobState state) {
-        return colorizeState(state, state.toString().toLowerCase());
+        return colorizeState(state, state.toString().toLowerCase(Locale.ROOT));
     }
 
     private String colorizeState(JobState state, String text) {

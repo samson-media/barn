@@ -9,6 +9,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -169,7 +170,7 @@ public class DescribeCommand extends BaseCommand {
         sb.append("================================================================================\n");
 
         // Basic info
-        sb.append("State:      ").append(job.state().toString().toLowerCase()).append("\n");
+        sb.append("State:      ").append(job.state().toString().toLowerCase(Locale.ROOT)).append("\n");
         if (job.tag() != null) {
             sb.append("Tag:        ").append(job.tag()).append("\n");
         }
@@ -239,7 +240,7 @@ public class DescribeCommand extends BaseCommand {
 
         // Job details
         response.put("id", job.id());
-        response.put("state", job.state().toString().toLowerCase());
+        response.put("state", job.state().toString().toLowerCase(Locale.ROOT));
         response.put("tag", job.tag());
         response.put("command", job.command());
         response.put("createdAt", job.createdAt());
