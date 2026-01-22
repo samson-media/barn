@@ -19,10 +19,12 @@ jobs:
           cat SHA256SUMS
 
           MACOS_ARM64_SHA=$(grep barn-macos-arm64 SHA256SUMS | awk '{print $1}')
+          MACOS_X64_SHA=$(grep barn-macos-x64 SHA256SUMS | awk '{print $1}')
           LINUX_ARM64_SHA=$(grep barn-linux-arm64 SHA256SUMS | awk '{print $1}')
           LINUX_X64_SHA=$(grep barn-linux-x64 SHA256SUMS | awk '{print $1}')
 
           echo "macos_arm64_sha=$MACOS_ARM64_SHA" >> $GITHUB_OUTPUT
+          echo "macos_x64_sha=$MACOS_X64_SHA" >> $GITHUB_OUTPUT
           echo "linux_arm64_sha=$LINUX_ARM64_SHA" >> $GITHUB_OUTPUT
           echo "linux_x64_sha=$LINUX_X64_SHA" >> $GITHUB_OUTPUT
 
@@ -37,6 +39,7 @@ jobs:
         env:
           VERSION: ${{ steps.release.outputs.version }}
           MACOS_ARM64_SHA: ${{ steps.release.outputs.macos_arm64_sha }}
+          MACOS_X64_SHA: ${{ steps.release.outputs.macos_x64_sha }}
           LINUX_ARM64_SHA: ${{ steps.release.outputs.linux_arm64_sha }}
           LINUX_X64_SHA: ${{ steps.release.outputs.linux_x64_sha }}
         run: |
@@ -54,6 +57,15 @@ jobs:
 
                 def install
                   bin.install "barn-macos-arm64" => "barn"
+                end
+              end
+
+              on_intel do
+                url "https://github.com/samson-media/barn/releases/download/v${VERSION}/barn-macos-x64"
+                sha256 "${MACOS_X64_SHA}"
+
+                def install
+                  bin.install "barn-macos-x64" => "barn"
                 end
               end
             end

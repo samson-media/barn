@@ -20,6 +20,8 @@ jobs:
             artifact: barn-linux-arm64
           - os: macos-latest
             artifact: barn-macos-arm64
+          - os: macos-13
+            artifact: barn-macos-x64
           - os: windows-latest
             artifact: barn-windows-x64
 
