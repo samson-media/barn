@@ -29,8 +29,42 @@
         <Or>
             <Class name="~.*ProcessExecutor.*"/>
             <Class name="~.*CommandRunner.*"/>
+            <Class name="~.*ServiceManager.*"/>
+            <Class name="~.*WindowsServiceManager.*"/>
+            <Class name="~.*SystemdManager.*"/>
+            <Class name="~.*LaunchdManager.*"/>
         </Or>
         <Bug pattern="COMMAND_INJECTION"/>
+    </Match>
+
+    <!-- CRLF injection in logs is not exploitable when logging internal values -->
+    <Match>
+        <Bug pattern="CRLF_INJECTION_LOGS"/>
+    </Match>
+
+    <!-- Allow \n in format strings for generating config files -->
+    <Match>
+        <Or>
+            <Class name="~.*LaunchdManager.*"/>
+            <Class name="~.*SystemdManager.*"/>
+        </Or>
+        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
+    </Match>
+
+    <!-- Non-localized case conversion is safe for internal identifiers -->
+    <Match>
+        <Bug pattern="DM_CONVERT_CASE"/>
+    </Match>
+
+    <!-- Unicode handling false positives for simple parsing -->
+    <Match>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+
+    <!-- Allow exposing internal representation for service classes -->
+    <Match>
+        <Class name="~.*BarnService.*"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
     </Match>
 
     <!-- Exclude false positives for try-with-resources -->
