@@ -60,4 +60,123 @@
         </Not>
     </Match>
 
+    <!-- Hardcoded absolute paths are intentional for system service installation paths -->
+    <Match>
+        <Or>
+            <Class name="~.*ConfigDefaults.*"/>
+            <Class name="~.*ServiceInstallCommand.*"/>
+            <Class name="~.*SystemdManager.*"/>
+            <Class name="~.*LaunchdManager.*"/>
+            <Class name="~.*IpcClient.*"/>
+        </Or>
+        <Bug pattern="DMI_HARDCODED_ABSOLUTE_FILENAME"/>
+    </Match>
+
+    <!-- XmlFormatter uses internal data, not user input - XML injection not applicable -->
+    <Match>
+        <Class name="~.*XmlFormatter.*"/>
+        <Bug pattern="POTENTIAL_XML_INJECTION"/>
+    </Match>
+
+    <!-- Throwing exceptions from constructors is a valid pattern for checked initialization -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!-- ThreadLocalRandom for retry jitter doesn't need cryptographic randomness -->
+    <Match>
+        <Class name="~.*RetryCalculator.*"/>
+        <Bug pattern="PREDICTABLE_RANDOM"/>
+    </Match>
+
+    <!-- Using \n instead of %n is intentional for systemd/launchd config file templates -->
+    <Match>
+        <Or>
+            <Class name="~.*SystemdManager.*"/>
+            <Class name="~.*LaunchdManager.*"/>
+        </Or>
+        <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
+    </Match>
+
+    <!-- Exposing internal representation is acceptable for records and DTOs -->
+    <Match>
+        <Or>
+            <Class name="~.*IpcMessage.*"/>
+            <Class name="~.*IpcRequest.*"/>
+            <Class name="~.*ProcessMonitor.*"/>
+            <Class name="~.*BarnService.*"/>
+        </Or>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+
+    <!-- Lazy initialization race condition in OperatingSystem.current() is benign -->
+    <Match>
+        <Class name="~.*OperatingSystem.*"/>
+        <Bug pattern="LI_LAZY_INIT_STATIC"/>
+    </Match>
+
+    <!-- Catching generic Exception is intentional in some cases for resilience -->
+    <Match>
+        <Or>
+            <Class name="~.*UsageCollector.*"/>
+            <Class name="~.*XmlFormatter.*"/>
+        </Or>
+        <Bug pattern="REC_CATCH_EXCEPTION"/>
+    </Match>
+
+    <!-- Throwing RuntimeException is intentional in ProcessMonitor for fatal errors -->
+    <Match>
+        <Class name="~.*ProcessMonitor.*"/>
+        <Bug pattern="THROWS_METHOD_THROWS_RUNTIMEEXCEPTION"/>
+    </Match>
+
+    <!-- Ignored Future returns are intentional for fire-and-forget tasks -->
+    <Match>
+        <Or>
+            <Class name="~.*JobScheduler.*"/>
+            <Class name="~.*IpcServer.*"/>
+        </Or>
+        <Bug pattern="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"/>
+    </Match>
+
+    <!-- Format string manipulation warnings in CLI - internal use only -->
+    <Match>
+        <Class name="~.*StatusCommand.*"/>
+        <Bug pattern="FORMAT_STRING_MANIPULATION"/>
+    </Match>
+
+    <!-- Use of TEMP env variable is intentional for Windows compatibility -->
+    <Match>
+        <Class name="~.*ConfigDefaults.*"/>
+        <Bug pattern="ENV_USE_PROPERTY_INSTEAD_OF_ENV"/>
+    </Match>
+
+    <!-- toLowerCase with Locale.ROOT is correct - these are false positives -->
+    <Match>
+        <Bug pattern="IMPROPER_UNICODE"/>
+    </Match>
+
+    <!-- IpcClient/IpcServer streams wrap channels managed separately - closing streams would close channels -->
+    <Match>
+        <Or>
+            <Class name="~.*IpcClient.*"/>
+            <Class name="~.*IpcServer.*"/>
+        </Or>
+        <Bug pattern="OS_OPEN_STREAM"/>
+    </Match>
+
+    <!-- Paths are always absolute in this codebase - getParent()/getFileName() won't return null -->
+    <Match>
+        <Or>
+            <Class name="~.*ProcessExecutor.*"/>
+            <Class name="~.*JobRunner.*"/>
+            <Class name="~.*JobRepository.*"/>
+            <Class name="~.*IpcServer.*"/>
+        </Or>
+        <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"/>
+    </Match>
+
 </FindBugsFilter>

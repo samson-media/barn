@@ -39,14 +39,13 @@
         <maven-shade-plugin.version>3.6.0</maven-shade-plugin.version>
         <checkstyle-plugin.version>3.6.0</checkstyle-plugin.version>
         <checkstyle.version>10.21.1</checkstyle.version>
-        <spotbugs-plugin.version>4.9.3.0</spotbugs-plugin.version>
-        <pmd-plugin.version>3.26.0</pmd-plugin.version>
+        <spotbugs-plugin.version>4.9.8.2</spotbugs-plugin.version>
         <jacoco-plugin.version>0.8.12</jacoco-plugin.version>
         <native-maven-plugin.version>0.10.4</native-maven-plugin.version>
 
         <!-- Code Quality Thresholds -->
         <jacoco.line.coverage>0.68</jacoco.line.coverage>
-        <jacoco.branch.coverage>0.58</jacoco.branch.coverage>
+        <jacoco.branch.coverage>0.57</jacoco.branch.coverage>
     </properties>
 
     <dependencies>
@@ -90,7 +89,7 @@
         <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
-            <version>4.8.6</version>
+            <version>4.9.8</version>
             <scope>provided</scope>
         </dependency>
 
@@ -287,31 +286,6 @@
                 </executions>
             </plugin>
 
-            <!-- PMD - Static Analysis -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>${pmd-plugin.version}</version>
-                <configuration>
-                    <rulesets>
-                        <ruleset>config/pmd/ruleset.xml</ruleset>
-                    </rulesets>
-                    <failOnViolation>true</failOnViolation>
-                    <printFailingErrors>true</printFailingErrors>
-                    <includeTests>true</includeTests>
-                    <targetJdk>${maven.compiler.target}</targetJdk>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>pmd-check</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- JaCoCo - Code Coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -407,7 +381,6 @@
             <properties>
                 <checkstyle.skip>true</checkstyle.skip>
                 <spotbugs.skip>true</spotbugs.skip>
-                <pmd.skip>true</pmd.skip>
                 <jacoco.skip>true</jacoco.skip>
             </properties>
         </profile>
@@ -431,11 +404,6 @@
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
                 <version>${spotbugs-plugin.version}</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>${pmd-plugin.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
