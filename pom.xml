@@ -6,7 +6,7 @@
 
     <groupId>com.samsonmedia</groupId>
     <artifactId>barn</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
     <packaging>jar</packaging>
 
     <name>Barn</name>
