@@ -393,6 +393,7 @@
                                 <buildArg>--no-fallback</buildArg>
                                 <buildArg>-H:+ReportExceptionStackTraces</buildArg>
                                 <buildArg>--enable-url-protocols=https</buildArg>
+                                <buildArg>-march=compatibility</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>
