@@ -309,6 +309,7 @@ Developers can use the --offline command line option to test how the service beh
 
 ## Documentation
 
+- [FFmpeg Integration Guide](docs/ffmpeg.md) explains FFmpeg-specific behavior (stdout/stderr, exit codes, recommended flags)
 - [Barn Temporary Directory Layout](docs/jobs.md) describes how barn tracks jobs and storage
 - [Barn Configuration](docs/config.md) describes configuration options, retry behavior, and cleanup policies
 - [Development Guide](docs/development.md) covers local development setup and building from source
