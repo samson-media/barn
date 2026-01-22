@@ -99,18 +99,9 @@ public class ServiceStartCommand extends BaseCommand {
     }
 
     private int startDaemon(Path effectiveBarnDir) throws IOException {
-        // For daemonizing, we re-exec with --foreground and nohup
+        // For daemonizing, we re-exec with --foreground
         // This is a simplified approach; production would use proper daemon techniques
-        String javaHome = System.getProperty("java.home");
-        String classPath = System.getProperty("java.class.path");
-
-        ProcessBuilder pb = new ProcessBuilder(
-            Path.of(javaHome, "bin", "java").toString(),
-            "-cp", classPath,
-            "com.samsonmedia.barn.Main",
-            "service", "start", "--foreground",
-            "--barn-dir", effectiveBarnDir.toString()
-        );
+        ProcessBuilder pb = buildDaemonCommand(effectiveBarnDir);
 
         if (globalOptions != null && globalOptions.getConfigPath().isPresent()) {
             pb.command().add("--config");
@@ -185,5 +176,34 @@ public class ServiceStartCommand extends BaseCommand {
             return barnDir;
         }
         return ConfigDefaults.getDefaultBaseDir();
+    }
+
+    private ProcessBuilder buildDaemonCommand(Path effectiveBarnDir) {
+        // Check if running as a native image
+        if (isNativeImage()) {
+            // In native image, re-exec the current executable
+            String executable = ProcessHandle.current().info().command().orElse("barn");
+            return new ProcessBuilder(
+                executable,
+                "service", "start", "--foreground",
+                "--barn-dir", effectiveBarnDir.toString()
+            );
+        } else {
+            // Running in JVM, use java command
+            String javaHome = System.getProperty("java.home");
+            String classPath = System.getProperty("java.class.path");
+            return new ProcessBuilder(
+                Path.of(javaHome, "bin", "java").toString(),
+                "-cp", classPath,
+                "com.samsonmedia.barn.Main",
+                "service", "start", "--foreground",
+                "--barn-dir", effectiveBarnDir.toString()
+            );
+        }
+    }
+
+    private boolean isNativeImage() {
+        // GraalVM sets this property when running as native image
+        return System.getProperty("org.graalvm.nativeimage.imagecode") != null;
     }
 }
