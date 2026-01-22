@@ -154,48 +154,30 @@ Example error response:
 }
 ```
 
-### Complete Example Script
+### Polling Example
+
+Poll until job completes:
 
 ```bash
-#!/bin/bash
-set -e
+# Submit job and get ID
+barn run --output=json -- ffmpeg -y -progress pipe:1 -threads 0 -i input.mkv -c:v libx264 output.mp4
+# Returns: {"id": "job-abc123", "state": "QUEUED", ...}
 
-INPUT="/path/to/input.mkv"
-OUTPUT="/path/to/output.mp4"
+# Poll for status
+barn describe job-abc123 --output=json
+# Check "state" field: "queued", "running", "succeeded", "failed"
 
-# Submit job
-RESPONSE=$(barn run --output=json -- ffmpeg -y -progress pipe:1 -threads 0 -i "$INPUT" -c:v libx264 "$OUTPUT")
-JOB_ID=$(echo "$RESPONSE" | jq -r '.id')
-echo "Started job: $JOB_ID"
-
-# Poll until complete
-while true; do
-  STATUS=$(barn describe "$JOB_ID" --output=json)
-  STATE=$(echo "$STATUS" | jq -r '.state')
-
-  case "$STATE" in
-    "queued"|"running")
-      # Get progress
-      PROGRESS=$(barn describe "$JOB_ID" --logs --output=json | jq -r '.logs.stdout' | grep -o 'speed=[0-9.]*x' | tail -1)
-      echo "Status: $STATE $PROGRESS"
-      sleep 2
-      ;;
-    "succeeded")
-      echo "Job completed successfully"
-      exit 0
-      ;;
-    "failed")
-      ERROR=$(echo "$STATUS" | jq -r '.error')
-      echo "Job failed: $ERROR"
-      exit 1
-      ;;
-    *)
-      echo "Job ended with state: $STATE"
-      exit 1
-      ;;
-  esac
-done
+# Get progress while running
+barn describe job-abc123 --logs --output=json
+# Parse "logs.stdout" for progress fields (frame=, speed=, progress=)
 ```
+
+The polling loop logic:
+1. Call `barn describe <job-id> --output=json`
+2. Check `state` field
+3. If `queued` or `running`, sleep and repeat
+4. If `succeeded`, job is done (exitCode = 0)
+5. If `failed`, check `error` and `logs.stderr` for details
 
 ---
 
@@ -275,15 +257,17 @@ This is correct behavior, not a bug. Use `-progress pipe:1` to get progress in s
 
 ## Monitoring FFmpeg Jobs
 
-To watch FFmpeg progress in real-time:
+To check FFmpeg progress:
 
 ```bash
-# Watch the stdout log (with -progress pipe:1)
-tail -f /tmp/barn/jobs/<job-id>/logs/stdout.log
+# Get current progress (human-readable)
+barn describe <job-id> --logs
 
-# Or use barn describe with --logs
-watch -n 2 'barn describe <job-id> --logs --output=json | jq -r .logs.stdout'
+# Get current progress (JSON for parsing)
+barn describe <job-id> --logs --output=json
 ```
+
+The `logs.stdout` field contains the `-progress pipe:1` output with fields like `frame=`, `fps=`, `speed=`, and `progress=`.
 
 ## FFmpeg Exit Codes
 
