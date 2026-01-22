@@ -154,30 +154,38 @@ Example error response:
 }
 ```
 
-### Polling Example
+### Step 5: Kill a Running Job (Optional)
 
-Poll until job completes:
+To stop a running job:
 
+**Command:**
 ```bash
-# Submit job and get ID
-barn run --output=json -- ffmpeg -y -progress pipe:1 -threads 0 -i input.mkv -c:v libx264 output.mp4
-# Returns: {"id": "job-abc123", "state": "QUEUED", ...}
-
-# Poll for status
-barn describe job-abc123 --output=json
-# Check "state" field: "queued", "running", "succeeded", "failed"
-
-# Get progress while running
-barn describe job-abc123 --logs --output=json
-# Parse "logs.stdout" for progress fields (frame=, speed=, progress=)
+barn kill job-cbe3e07f --output=json
 ```
 
-The polling loop logic:
-1. Call `barn describe <job-id> --output=json`
-2. Check `state` field
-3. If `queued` or `running`, sleep and repeat
-4. If `succeeded`, job is done (exitCode = 0)
-5. If `failed`, check `error` and `logs.stderr` for details
+**Output:**
+```json
+{
+  "id" : "job-cbe3e07f",
+  "state" : "killed",
+  "pid" : 70923,
+  "exitCode" : null,
+  "error" : "Job killed by user"
+}
+```
+
+---
+
+### Summary
+
+| Step | Command | Key Output Fields |
+|------|---------|-------------------|
+| Submit | `barn run --output=json -- ffmpeg ...` | `id`, `state` |
+| Poll | `barn describe <id> --output=json` | `state`, `exitCode` |
+| Progress | `barn describe <id> --logs --output=json` | `logs.stdout`, `logs.stderr` |
+| Kill | `barn kill <id> --output=json` | `state` |
+
+**State values:** `queued` → `running` → `succeeded` / `failed` / `killed`
 
 ---
 
