@@ -237,7 +237,7 @@ public class HumanFormatter implements OutputFormatter {
             case QUEUED -> colorize(text, CYAN);
             case RUNNING -> colorize(text, YELLOW);
             case SUCCEEDED -> colorize(text, GREEN);
-            case FAILED -> colorize(text, RED);
+            case FAILED, KILLED -> colorize(text, RED);
             case CANCELED -> text;
         };
     }

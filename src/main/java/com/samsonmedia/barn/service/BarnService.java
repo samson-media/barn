@@ -69,7 +69,7 @@ public class BarnService {
 
         Duration heartbeatThreshold = Duration.ofSeconds(config.service().staleHeartbeatThresholdSeconds());
         HeartbeatChecker heartbeatChecker = new HeartbeatChecker(heartbeatThreshold);
-        this.crashRecovery = new CrashRecovery(repository, heartbeatChecker, dirs);
+        this.crashRecovery = new CrashRecovery(repository, heartbeatChecker, dirs, config);
 
         this.shutdownLatch = new CountDownLatch(1);
         this.running = new AtomicBoolean(false);

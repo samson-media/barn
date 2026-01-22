@@ -1,6 +1,7 @@
 package com.samsonmedia.barn.execution;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -8,8 +9,10 @@ import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.samsonmedia.barn.config.Config;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.jobs.RetryCalculator;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
 
@@ -23,17 +26,19 @@ import com.samsonmedia.barn.state.JobState;
  *   <li>Its process is no longer alive (or PID is unknown)</li>
  * </ul>
  *
- * <p>Orphaned jobs are marked as failed with a symbolic exit code.
+ * <p>Orphaned jobs are marked as KILLED and automatically scheduled for retry
+ * if retries are configured and not exhausted.
  */
 public class CrashRecovery {
 
     private static final Logger LOG = LoggerFactory.getLogger(CrashRecovery.class);
-    private static final String ORPHANED_EXIT_CODE = "orphaned_process";
-    private static final String ORPHANED_ERROR = "Process orphaned - daemon restarted";
+    private static final String KILLED_ERROR = "Process killed - daemon restarted";
 
     private final JobRepository repository;
     private final HeartbeatChecker heartbeatChecker;
     private final BarnDirectories dirs;
+    private final RetryCalculator retryCalculator;
+    private final int maxRetries;
 
     /**
      * Creates a CrashRecovery instance.
@@ -41,11 +46,16 @@ public class CrashRecovery {
      * @param repository the job repository
      * @param heartbeatChecker the heartbeat checker
      * @param dirs the directory manager
+     * @param config the configuration
      */
-    public CrashRecovery(JobRepository repository, HeartbeatChecker heartbeatChecker, BarnDirectories dirs) {
+    public CrashRecovery(JobRepository repository, HeartbeatChecker heartbeatChecker, BarnDirectories dirs,
+                         Config config) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
         this.heartbeatChecker = Objects.requireNonNull(heartbeatChecker, "heartbeatChecker must not be null");
         this.dirs = Objects.requireNonNull(dirs, "dirs must not be null");
+        Objects.requireNonNull(config, "config must not be null");
+        this.retryCalculator = new RetryCalculator(config.jobs());
+        this.maxRetries = config.jobs().maxRetries();
     }
 
     /**
@@ -128,6 +138,18 @@ public class CrashRecovery {
     private void recoverJob(Job job) throws IOException {
         LOG.info("Recovering orphaned job: {} (PID: {})", job.id(), job.pid());
 
-        repository.markFailed(job.id(), ORPHANED_EXIT_CODE, ORPHANED_ERROR);
+        // Mark the job as killed
+        repository.markKilled(job.id(), KILLED_ERROR);
+
+        // Check if we should auto-retry
+        if (maxRetries > 0 && job.retryCount() < maxRetries) {
+            // Schedule retry with exponential backoff
+            Instant retryAt = Instant.now().plus(retryCalculator.calculateDelay(job.retryCount()));
+            repository.scheduleRetry(job.id(), retryAt, null, KILLED_ERROR);
+            LOG.info("Job {} scheduled for auto-retry at {} (attempt {})",
+                job.id(), retryAt, job.retryCount() + 1);
+        } else {
+            LOG.info("Job {} will not be retried (retries exhausted or disabled)", job.id());
+        }
     }
 }

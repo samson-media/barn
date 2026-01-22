@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import com.samsonmedia.barn.config.Config;
 import com.samsonmedia.barn.config.JobsConfig;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
@@ -33,7 +34,8 @@ class CrashRecoveryTest {
     private JobRepository repository;
     private HeartbeatChecker heartbeatChecker;
     private CrashRecovery crashRecovery;
-    private JobsConfig config;
+    private JobsConfig jobsConfig;
+    private Config config;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -41,8 +43,9 @@ class CrashRecoveryTest {
         dirs.initialize();
         repository = new JobRepository(dirs);
         heartbeatChecker = new HeartbeatChecker(Duration.ofSeconds(30));
-        crashRecovery = new CrashRecovery(repository, heartbeatChecker, dirs);
-        config = JobsConfig.withDefaults();
+        config = Config.withDefaults();
+        crashRecovery = new CrashRecovery(repository, heartbeatChecker, dirs, config);
+        jobsConfig = JobsConfig.withDefaults();
     }
 
     @Nested
@@ -50,19 +53,25 @@ class CrashRecoveryTest {
 
         @Test
         void constructor_withNullRepository_shouldThrowException() {
-            assertThatThrownBy(() -> new CrashRecovery(null, heartbeatChecker, dirs))
+            assertThatThrownBy(() -> new CrashRecovery(null, heartbeatChecker, dirs, config))
                 .isInstanceOf(NullPointerException.class);
         }
 
         @Test
         void constructor_withNullHeartbeatChecker_shouldThrowException() {
-            assertThatThrownBy(() -> new CrashRecovery(repository, null, dirs))
+            assertThatThrownBy(() -> new CrashRecovery(repository, null, dirs, config))
                 .isInstanceOf(NullPointerException.class);
         }
 
         @Test
         void constructor_withNullDirs_shouldThrowException() {
-            assertThatThrownBy(() -> new CrashRecovery(repository, heartbeatChecker, null))
+            assertThatThrownBy(() -> new CrashRecovery(repository, heartbeatChecker, null, config))
+                .isInstanceOf(NullPointerException.class);
+        }
+
+        @Test
+        void constructor_withNullConfig_shouldThrowException() {
+            assertThatThrownBy(() -> new CrashRecovery(repository, heartbeatChecker, dirs, null))
                 .isInstanceOf(NullPointerException.class);
         }
     }
@@ -79,7 +88,7 @@ class CrashRecoveryTest {
 
         @Test
         void recoverOrphanedJobs_withQueuedJobs_shouldNotRecover() throws IOException {
-            repository.create(List.of("echo", "test"), "test", config);
+            repository.create(List.of("echo", "test"), "test", jobsConfig);
 
             List<Job> recovered = crashRecovery.recoverOrphanedJobs();
 
@@ -88,7 +97,7 @@ class CrashRecoveryTest {
 
         @Test
         void recoverOrphanedJobs_withCompletedJobs_shouldNotRecover() throws IOException {
-            Job job = repository.create(List.of("echo", "test"), "test", config);
+            Job job = repository.create(List.of("echo", "test"), "test", jobsConfig);
             repository.markStarted(job.id(), 12345);
             repository.markCompleted(job.id(), 0, null);
 
@@ -99,7 +108,7 @@ class CrashRecoveryTest {
 
         @Test
         void recoverOrphanedJobs_withRunningJobFreshHeartbeat_shouldNotRecover() throws IOException {
-            Job job = repository.create(List.of("echo", "test"), "test", config);
+            Job job = repository.create(List.of("echo", "test"), "test", jobsConfig);
             repository.markStarted(job.id(), ProcessUtils.getCurrentPid());  // Use current PID (alive)
             repository.updateHeartbeat(job.id(), Instant.now());  // Fresh heartbeat
 
@@ -110,7 +119,7 @@ class CrashRecoveryTest {
 
         @Test
         void recoverOrphanedJobs_withRunningJobStaleHeartbeatDeadProcess_shouldRecover() throws IOException {
-            Job job = repository.create(List.of("echo", "test"), "test", config);
+            Job job = repository.create(List.of("echo", "test"), "test", jobsConfig);
             // Use a PID that's unlikely to exist (very high number)
             repository.markStarted(job.id(), 999999999L);
             // Set a stale heartbeat
@@ -121,15 +130,15 @@ class CrashRecoveryTest {
             assertThat(recovered).hasSize(1);
             assertThat(recovered.get(0).id()).isEqualTo(job.id());
 
-            // Verify job is now marked as failed
+            // Verify job was killed and auto-retried (state is QUEUED with retry count incremented)
             Job updatedJob = repository.findById(job.id()).orElseThrow();
-            assertThat(updatedJob.state()).isEqualTo(JobState.FAILED);
-            assertThat(updatedJob.error()).contains("orphaned");
+            assertThat(updatedJob.state()).isEqualTo(JobState.QUEUED);
+            assertThat(updatedJob.retryCount()).isEqualTo(1);
         }
 
         @Test
         void recoverOrphanedJobs_withRunningJobNoHeartbeatDeadProcess_shouldRecover() throws IOException {
-            Job job = repository.create(List.of("echo", "test"), "test", config);
+            Job job = repository.create(List.of("echo", "test"), "test", jobsConfig);
             repository.markStarted(job.id(), 999999999L);
             // Clear heartbeat to simulate crash before first heartbeat
             clearHeartbeat(job.id());
@@ -142,7 +151,7 @@ class CrashRecoveryTest {
 
         @Test
         void recoverOrphanedJobs_withRunningJobStaleHeartbeatAliveProcess_shouldNotRecover() throws IOException {
-            Job job = repository.create(List.of("echo", "test"), "test", config);
+            Job job = repository.create(List.of("echo", "test"), "test", jobsConfig);
             // Use current process PID which is definitely alive
             repository.markStarted(job.id(), ProcessUtils.getCurrentPid());
             // Set a stale heartbeat
@@ -156,7 +165,7 @@ class CrashRecoveryTest {
 
         @Test
         void recoverOrphanedJobs_withRunningJobNoPid_shouldRecover() throws IOException {
-            Job job = repository.create(List.of("echo", "test"), "test", config);
+            Job job = repository.create(List.of("echo", "test"), "test", jobsConfig);
             // Manually set running state without PID (simulates partial write)
             StateFiles stateFiles = new StateFiles(dirs.getJobDir(job.id()));
             stateFiles.writeState(JobState.RUNNING);
@@ -171,7 +180,7 @@ class CrashRecoveryTest {
         void recoverOrphanedJobs_withMultipleOrphanedJobs_shouldRecoverAll() throws IOException {
             // Create 3 orphaned jobs
             for (int i = 0; i < 3; i++) {
-                Job job = repository.create(List.of("echo", "test" + i), "test", config);
+                Job job = repository.create(List.of("echo", "test" + i), "test", jobsConfig);
                 repository.markStarted(job.id(), 999999999L + i);
                 setStaleHeartbeat(job.id(), Duration.ofMinutes(5));
             }
@@ -183,16 +192,41 @@ class CrashRecoveryTest {
 
         @Test
         void recoverOrphanedJobs_shouldSetCorrectExitCode() throws IOException {
-            Job job = repository.create(List.of("echo", "test"), "test", config);
+            Job job = repository.create(List.of("echo", "test"), "test", jobsConfig);
             repository.markStarted(job.id(), 999999999L);
             setStaleHeartbeat(job.id(), Duration.ofMinutes(5));
 
             crashRecovery.recoverOrphanedJobs();
 
             Job updatedJob = repository.findById(job.id()).orElseThrow();
-            // Exit code is stored as symbolic string, so we check error message
-            assertThat(updatedJob.error()).contains("orphaned");
-            assertThat(updatedJob.finishedAt()).isNotNull();
+            // Verify the job was killed and auto-retried (state is QUEUED with retry count incremented)
+            assertThat(updatedJob.state()).isEqualTo(JobState.QUEUED);
+            assertThat(updatedJob.retryCount()).isEqualTo(1);
+            assertThat(updatedJob.retryAt()).isNotNull();
+        }
+
+        @Test
+        void recoverOrphanedJobs_withRetriesExhausted_shouldStayKilled() throws IOException {
+            // Create a config with maxRetries = 0 so no auto-retry
+            Config noRetryConfig = new Config(
+                config.service(),
+                new JobsConfig(config.jobs().defaultTimeoutSeconds(), 0, 1, 1.0, List.of()),
+                config.cleanup(),
+                config.storage()
+            );
+            CrashRecovery noRetryCrashRecovery = new CrashRecovery(
+                repository, heartbeatChecker, dirs, noRetryConfig);
+
+            Job job = repository.create(List.of("echo", "test"), "test", jobsConfig);
+            repository.markStarted(job.id(), 999999999L);
+            setStaleHeartbeat(job.id(), Duration.ofMinutes(5));
+
+            noRetryCrashRecovery.recoverOrphanedJobs();
+
+            Job updatedJob = repository.findById(job.id()).orElseThrow();
+            // With retries disabled, job should stay in KILLED state
+            assertThat(updatedJob.state()).isEqualTo(JobState.KILLED);
+            assertThat(updatedJob.error()).contains("killed");
         }
     }
 

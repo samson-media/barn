@@ -17,7 +17,10 @@ public enum JobState {
     FAILED,
 
     /** Job was manually canceled. */
-    CANCELED;
+    CANCELED,
+
+    /** Job was killed when the service was terminated unexpectedly. */
+    KILLED;
 
     /**
      * Parses a job state from a string (case-insensitive).
@@ -33,8 +36,8 @@ public enum JobState {
         try {
             return valueOf(value.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(
-                "Invalid job state: '" + value + "'. Valid values are: queued, running, succeeded, failed, canceled");
+            throw new IllegalArgumentException("Invalid job state: '" + value
+                + "'. Valid values are: queued, running, succeeded, failed, canceled, killed");
         }
     }
 
@@ -53,7 +56,7 @@ public enum JobState {
      * @return true if the job is in a terminal state
      */
     public boolean isTerminal() {
-        return this == SUCCEEDED || this == FAILED || this == CANCELED;
+        return this == SUCCEEDED || this == FAILED || this == CANCELED || this == KILLED;
     }
 
     /**

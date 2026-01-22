@@ -258,6 +258,27 @@ public class JobRepository {
     }
 
     /**
+     * Marks a job as killed (orphaned when service was terminated).
+     *
+     * @param id the job ID
+     * @param error the error message
+     * @throws IOException if update fails
+     */
+    public void markKilled(String id, String error) throws IOException {
+        Objects.requireNonNull(id, "id must not be null");
+
+        StateFiles stateFiles = new StateFiles(dirs.getJobDir(id));
+
+        updateState(id, JobState.KILLED);
+        stateFiles.writeFinishedAt(Instant.now());
+        if (error != null) {
+            stateFiles.writeError(error);
+        }
+
+        LOG.info("Job {} killed: {}", id, error);
+    }
+
+    /**
      * Schedules a job for retry.
      *
      * @param id the job ID

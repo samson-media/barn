@@ -17,6 +17,7 @@ class JobStateTest {
         assertThat(JobState.fromString("succeeded")).isEqualTo(JobState.SUCCEEDED);
         assertThat(JobState.fromString("failed")).isEqualTo(JobState.FAILED);
         assertThat(JobState.fromString("canceled")).isEqualTo(JobState.CANCELED);
+        assertThat(JobState.fromString("killed")).isEqualTo(JobState.KILLED);
     }
 
     @Test
@@ -54,7 +55,7 @@ class JobStateTest {
         assertThatThrownBy(() -> JobState.fromString("invalid"))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Invalid job state")
-            .hasMessageContaining("queued, running, succeeded, failed, canceled");
+            .hasMessageContaining("queued, running, succeeded, failed, canceled, killed");
     }
 
     @Test
@@ -64,6 +65,7 @@ class JobStateTest {
         assertThat(JobState.SUCCEEDED.toLowercase()).isEqualTo("succeeded");
         assertThat(JobState.FAILED.toLowercase()).isEqualTo("failed");
         assertThat(JobState.CANCELED.toLowercase()).isEqualTo("canceled");
+        assertThat(JobState.KILLED.toLowercase()).isEqualTo("killed");
     }
 
     @Test
@@ -71,6 +73,7 @@ class JobStateTest {
         assertThat(JobState.SUCCEEDED.isTerminal()).isTrue();
         assertThat(JobState.FAILED.isTerminal()).isTrue();
         assertThat(JobState.CANCELED.isTerminal()).isTrue();
+        assertThat(JobState.KILLED.isTerminal()).isTrue();
     }
 
     @Test
@@ -90,5 +93,6 @@ class JobStateTest {
         assertThat(JobState.SUCCEEDED.isActive()).isFalse();
         assertThat(JobState.FAILED.isActive()).isFalse();
         assertThat(JobState.CANCELED.isActive()).isFalse();
+        assertThat(JobState.KILLED.isActive()).isFalse();
     }
 }

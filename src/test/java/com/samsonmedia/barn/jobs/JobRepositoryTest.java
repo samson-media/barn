@@ -228,6 +228,35 @@ class JobRepositoryTest {
     }
 
     @Nested
+    class MarkKilled {
+
+        @Test
+        void markKilled_shouldSetKilledState() throws IOException {
+            Job job = repository.create(List.of("echo"), null, config);
+            repository.markStarted(job.id(), 12345L);
+
+            repository.markKilled(job.id(), "Process killed - daemon restarted");
+
+            Job updated = repository.findById(job.id()).orElseThrow();
+            assertThat(updated.state()).isEqualTo(JobState.KILLED);
+            assertThat(updated.error()).isEqualTo("Process killed - daemon restarted");
+            assertThat(updated.finishedAt()).isNotNull();
+        }
+
+        @Test
+        void markKilled_withNullError_shouldSucceed() throws IOException {
+            Job job = repository.create(List.of("echo"), null, config);
+            repository.markStarted(job.id(), 12345L);
+
+            repository.markKilled(job.id(), null);
+
+            Job updated = repository.findById(job.id()).orElseThrow();
+            assertThat(updated.state()).isEqualTo(JobState.KILLED);
+            assertThat(updated.error()).isNull();
+        }
+    }
+
+    @Nested
     class ScheduleRetry {
 
         @Test
@@ -235,6 +264,21 @@ class JobRepositoryTest {
             Job job = repository.create(List.of("echo"), null, config);
             repository.markStarted(job.id(), 12345L);
             repository.markCompleted(job.id(), 1, "Failed");
+            Instant retryAt = Instant.now().plusSeconds(30);
+
+            repository.scheduleRetry(job.id(), retryAt);
+
+            Job updated = repository.findById(job.id()).orElseThrow();
+            assertThat(updated.state()).isEqualTo(JobState.QUEUED);
+            assertThat(updated.retryCount()).isEqualTo(1);
+            assertThat(updated.retryAt()).isEqualTo(retryAt);
+        }
+
+        @Test
+        void scheduleRetry_fromKilledState_shouldTransitionToQueued() throws IOException {
+            Job job = repository.create(List.of("echo"), null, config);
+            repository.markStarted(job.id(), 12345L);
+            repository.markKilled(job.id(), "Daemon restarted");
             Instant retryAt = Instant.now().plusSeconds(30);
 
             repository.scheduleRetry(job.id(), retryAt);

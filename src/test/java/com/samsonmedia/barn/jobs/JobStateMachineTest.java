@@ -45,8 +45,25 @@ class JobStateMachineTest {
         }
 
         @Test
+        void running_toKilled_shouldBeValid() {
+            JobStateMachine.validateTransition(JobState.RUNNING, JobState.KILLED);
+        }
+
+        @Test
         void failed_toQueued_shouldBeValid() {
             JobStateMachine.validateTransition(JobState.FAILED, JobState.QUEUED);
+        }
+
+        @Test
+        void killed_toQueued_shouldBeValid() {
+            JobStateMachine.validateTransition(JobState.KILLED, JobState.QUEUED);
+        }
+
+        @Test
+        void killed_toRunning_shouldThrowException() {
+            assertThatThrownBy(() ->
+                JobStateMachine.validateTransition(JobState.KILLED, JobState.RUNNING))
+                .isInstanceOf(IllegalStateException.class);
         }
 
         @Test
@@ -111,7 +128,9 @@ class JobStateMachineTest {
             assertThat(JobStateMachine.isValidTransition(JobState.RUNNING, JobState.SUCCEEDED)).isTrue();
             assertThat(JobStateMachine.isValidTransition(JobState.RUNNING, JobState.FAILED)).isTrue();
             assertThat(JobStateMachine.isValidTransition(JobState.RUNNING, JobState.CANCELED)).isTrue();
+            assertThat(JobStateMachine.isValidTransition(JobState.RUNNING, JobState.KILLED)).isTrue();
             assertThat(JobStateMachine.isValidTransition(JobState.FAILED, JobState.QUEUED)).isTrue();
+            assertThat(JobStateMachine.isValidTransition(JobState.KILLED, JobState.QUEUED)).isTrue();
         }
 
         @Test
@@ -119,6 +138,7 @@ class JobStateMachineTest {
             assertThat(JobStateMachine.isValidTransition(JobState.QUEUED, JobState.SUCCEEDED)).isFalse();
             assertThat(JobStateMachine.isValidTransition(JobState.SUCCEEDED, JobState.QUEUED)).isFalse();
             assertThat(JobStateMachine.isValidTransition(JobState.CANCELED, JobState.RUNNING)).isFalse();
+            assertThat(JobStateMachine.isValidTransition(JobState.KILLED, JobState.RUNNING)).isFalse();
         }
 
         @Test
@@ -138,9 +158,9 @@ class JobStateMachineTest {
         }
 
         @Test
-        void forRunning_shouldReturnSucceededFailedCanceled() {
+        void forRunning_shouldReturnSucceededFailedCanceledKilled() {
             assertThat(JobStateMachine.getValidTransitions(JobState.RUNNING))
-                .containsExactlyInAnyOrder(JobState.SUCCEEDED, JobState.FAILED, JobState.CANCELED);
+                .containsExactlyInAnyOrder(JobState.SUCCEEDED, JobState.FAILED, JobState.CANCELED, JobState.KILLED);
         }
 
         @Test
@@ -157,6 +177,12 @@ class JobStateMachineTest {
         @Test
         void forCanceled_shouldReturnEmpty() {
             assertThat(JobStateMachine.getValidTransitions(JobState.CANCELED)).isEmpty();
+        }
+
+        @Test
+        void forKilled_shouldReturnQueued() {
+            assertThat(JobStateMachine.getValidTransitions(JobState.KILLED))
+                .containsExactly(JobState.QUEUED);
         }
 
         @Test

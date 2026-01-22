@@ -98,10 +98,11 @@ public class ServiceStatusCommand extends BaseCommand {
                     int succeeded = countJobsByState(effectiveBarnDir, JobState.SUCCEEDED);
                     int failed = countJobsByState(effectiveBarnDir, JobState.FAILED);
                     int canceled = countJobsByState(effectiveBarnDir, JobState.CANCELED);
+                    int killed = countJobsByState(effectiveBarnDir, JobState.KILLED);
                     int total = countTotalJobs(effectiveBarnDir);
 
                     return ServiceStatus.running(pid, startTime, running, queued, succeeded, failed,
-                        canceled, total, effectiveBarnDir, serviceManager);
+                        canceled, killed, total, effectiveBarnDir, serviceManager);
                 }
             } catch (IpcException e) {
                 LOG.debug("IPC failed, using basic status: {}", e.getMessage());
@@ -115,9 +116,10 @@ public class ServiceStatusCommand extends BaseCommand {
         int succeeded = countJobsByState(effectiveBarnDir, JobState.SUCCEEDED);
         int failed = countJobsByState(effectiveBarnDir, JobState.FAILED);
         int canceled = countJobsByState(effectiveBarnDir, JobState.CANCELED);
+        int killed = countJobsByState(effectiveBarnDir, JobState.KILLED);
 
         return ServiceStatus.running(pid, startTime, running, queued, succeeded, failed, canceled,
-            total, effectiveBarnDir, serviceManager);
+            killed, total, effectiveBarnDir, serviceManager);
     }
 
     private int getIntValue(Map<String, Object> map, String key, int defaultValue) {
@@ -182,6 +184,7 @@ public class ServiceStatusCommand extends BaseCommand {
             sb.append(String.format("  Succeeded:  %d%n", status.succeededJobs));
             sb.append(String.format("  Failed:     %d%n", status.failedJobs));
             sb.append(String.format("  Canceled:   %d%n", status.canceledJobs));
+            sb.append(String.format("  Killed:     %d%n", status.killedJobs));
             sb.append(String.format("  Total:      %d%n", status.totalJobs));
         }
 
@@ -254,13 +257,14 @@ public class ServiceStatusCommand extends BaseCommand {
         final int succeededJobs;
         final int failedJobs;
         final int canceledJobs;
+        final int killedJobs;
         final int totalJobs;
         final Path dataDir;
         final String serviceManager;
 
         private ServiceStatus(boolean running, long pid, Instant startedAt, long uptimeSeconds,
                 int runningJobs, int queuedJobs, int succeededJobs, int failedJobs, int canceledJobs,
-                int totalJobs, Path dataDir, String serviceManager) {
+                int killedJobs, int totalJobs, Path dataDir, String serviceManager) {
             this.running = running;
             this.pid = pid;
             this.startedAt = startedAt;
@@ -270,21 +274,22 @@ public class ServiceStatusCommand extends BaseCommand {
             this.succeededJobs = succeededJobs;
             this.failedJobs = failedJobs;
             this.canceledJobs = canceledJobs;
+            this.killedJobs = killedJobs;
             this.totalJobs = totalJobs;
             this.dataDir = dataDir;
             this.serviceManager = serviceManager;
         }
 
         static ServiceStatus stopped(Path dataDir, String serviceManager) {
-            return new ServiceStatus(false, 0, null, 0, 0, 0, 0, 0, 0, 0, dataDir, serviceManager);
+            return new ServiceStatus(false, 0, null, 0, 0, 0, 0, 0, 0, 0, 0, dataDir, serviceManager);
         }
 
         static ServiceStatus running(long pid, Instant startedAt, int runningJobs, int queuedJobs,
-                int succeededJobs, int failedJobs, int canceledJobs, int totalJobs,
+                int succeededJobs, int failedJobs, int canceledJobs, int killedJobs, int totalJobs,
                 Path dataDir, String serviceManager) {
             long uptime = Duration.between(startedAt, Instant.now()).getSeconds();
             return new ServiceStatus(true, pid, startedAt, uptime, runningJobs, queuedJobs,
-                succeededJobs, failedJobs, canceledJobs, totalJobs, dataDir, serviceManager);
+                succeededJobs, failedJobs, canceledJobs, killedJobs, totalJobs, dataDir, serviceManager);
         }
 
         Map<String, Object> toMap() {
@@ -303,6 +308,7 @@ public class ServiceStatusCommand extends BaseCommand {
                 jobs.put("succeeded", succeededJobs);
                 jobs.put("failed", failedJobs);
                 jobs.put("canceled", canceledJobs);
+                jobs.put("killed", killedJobs);
                 jobs.put("total", totalJobs);
                 map.put("jobs", jobs);
             }
