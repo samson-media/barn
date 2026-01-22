@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.7] - 2026-01-22
+
+### Fixed
+- Native image IPC deserialization (IpcMessage reflection config)
+
 ## [0.1.6] - 2026-01-22
 
 ### Added
@@ -62,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Jobs that fail to start now properly transition to FAILED state
 - Startup errors are written to stderr.log for visibility
 
+[0.1.7]: https://github.com/samson-media/barn/releases/tag/v0.1.7
 [0.1.6]: https://github.com/samson-media/barn/releases/tag/v0.1.6
 [0.1.5]: https://github.com/samson-media/barn/releases/tag/v0.1.5
 [0.1.4]: https://github.com/samson-media/barn/releases/tag/v0.1.4
