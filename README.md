@@ -42,57 +42,92 @@ This project treats FFmpeg jobs as **first-class managed units of work**, not sh
 
 ## Installation
 
-### macOS
+### Quick Install (Recommended)
 
-**Homebrew (recommended):**
+The installer scripts download the latest release, install the binary, and set up barn to run as a service on startup.
+
+**macOS / Linux:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/samson-media/barn/main/install.sh | sh
+```
+
+**Windows (PowerShell as Administrator):**
+```powershell
+iwr -useb https://raw.githubusercontent.com/samson-media/barn/main/install.ps1 | iex
+```
+
+**Windows Installer (setup.exe):**
+
+Download the latest `setup-barn-vX.X.X-windows-x64.exe` from the [releases page](https://github.com/samson-media/barn/releases/latest).
+
+### Alternative Installation Methods
+
+#### macOS - Homebrew
+
 ```bash
 brew install samson-media/tap/barn
 ```
 
-**Manual download:**
+#### Manual Download
+
+**macOS (ARM64):**
 ```bash
 curl -L -o barn https://github.com/samson-media/barn/releases/latest/download/barn-macos-arm64
 chmod +x barn
 sudo mv barn /usr/local/bin/
 ```
 
-### Linux
-
-**Download the binary:**
+**Linux (x64):**
 ```bash
-# For x64
 curl -L -o barn https://github.com/samson-media/barn/releases/latest/download/barn-linux-x64
-
-# For ARM64
-curl -L -o barn https://github.com/samson-media/barn/releases/latest/download/barn-linux-arm64
-
 chmod +x barn
 sudo mv barn /usr/local/bin/
 ```
 
-### Windows
+**Linux (ARM64):**
+```bash
+curl -L -o barn https://github.com/samson-media/barn/releases/latest/download/barn-linux-arm64
+chmod +x barn
+sudo mv barn /usr/local/bin/
+```
 
-**PowerShell (recommended):**
+**Windows (PowerShell):**
 ```powershell
-# Create install directory
 New-Item -ItemType Directory -Force -Path "$env:LOCALAPPDATA\Programs\barn"
-
-# Download
 Invoke-WebRequest -Uri "https://github.com/samson-media/barn/releases/latest/download/barn-windows-x64.exe" -OutFile "$env:LOCALAPPDATA\Programs\barn\barn.exe"
-
-# Add to PATH (current user)
 $path = [Environment]::GetEnvironmentVariable("Path", "User")
 if ($path -notlike "*$env:LOCALAPPDATA\Programs\barn*") {
     [Environment]::SetEnvironmentVariable("Path", "$path;$env:LOCALAPPDATA\Programs\barn", "User")
 }
 ```
 
-Restart your terminal after installation.
+### Setting Up the Service (Manual Install)
+
+If you installed manually, you need to set up the service to run on startup:
+
+**Linux (systemd):**
+```bash
+barn service install
+sudo systemctl enable barn
+sudo systemctl start barn
+```
+
+**macOS (launchd):**
+```bash
+barn service install
+```
+
+**Windows (as Administrator):**
+```powershell
+barn service install
+barn service start
+```
 
 ### Verify Installation
 
 ```bash
 barn --version
+barn service status
 ```
 
 ---
