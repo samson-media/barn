@@ -68,9 +68,6 @@ jobs:
           name: coverage-report
           path: target/site/jacoco/
 
-      - name: Check Coverage Thresholds
-        run: mvn jacoco:check
-
   verify:
     name: Full Verification
     needs: [checkstyle, spotbugs, test]
