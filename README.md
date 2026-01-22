@@ -147,8 +147,8 @@ barn is just one binary for both the service and the client. the client uses IPC
 
 clients typically access barn over ssh:
 - fetch from webdav server: `barn run --output=json curl -u username:password -o /tmp/barn/input/video.mp4 https://example.com/dav/remote-file.ext`
-- analyse file with ffmpeg: `barn run --output=json curl ffprobe -i /tmp/barn/input/video.mp4`
-- get status of the jobs `bar status --output=json`
+- analyse file with ffmpeg: `barn run --output=json ffprobe -i /tmp/barn/input/video.mp4`
+- get status of the jobs `barn status --output=json`
 
 barn's output defaults to a human-readable format, but also supports xml or json via the --output={json|xml} cli option.
 
