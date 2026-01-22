@@ -44,33 +44,40 @@ This project treats FFmpeg jobs as **first-class managed units of work**, not sh
 
 ### Quick Install (Recommended)
 
-The installer scripts download the latest release, install the binary, and set up barn to run as a service on startup.
-
-**macOS / Linux:**
-```bash
-curl -fsSL https://raw.githubusercontent.com/samson-media/barn/main/install.sh | sh
-```
-
-**Windows (PowerShell as Administrator):**
-```powershell
-iwr -useb https://raw.githubusercontent.com/samson-media/barn/main/install.ps1 | iex
-```
-
-**Windows Installer (setup.exe):**
-
-Download the latest `setup-barn-vX.X.X-windows-x64.exe` from the [releases page](https://github.com/samson-media/barn/releases/latest).
-
-### Alternative Installation Methods
-
-#### macOS - Homebrew
+#### MacOS - Homebrew
 
 ```bash
 brew install samson-media/tap/barn
 ```
 
-#### Manual Download
 
-**macOS (ARM64):**
+#### Linux / MacOS 
+
+The installer scripts download the latest release, install the binary, and set up barn to run as a service on startup.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/samson-media/barn/main/install.sh | sh
+```
+
+#### Windows Installer (setup.exe)
+
+Download the latest `setup-barn-vX.X.X-windows-x64.exe` from the [releases page](https://github.com/samson-media/barn/releases/latest).
+
+
+
+### Alternative Installation Methods
+
+### Windows (PowerShell as Administrator)
+
+The installer scripts download the latest release, install the binary, and set up barn to run as a service on startup.
+
+```powershell
+iwr -useb https://raw.githubusercontent.com/samson-media/barn/main/install.ps1 | iex
+```
+
+### Manual Download
+
+**MacOS (ARM64):**
 ```bash
 curl -L -o barn https://github.com/samson-media/barn/releases/latest/download/barn-macos-arm64
 chmod +x barn
