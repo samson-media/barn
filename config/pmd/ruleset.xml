@@ -48,6 +48,10 @@
         <exclude name="CommentDefaultAccessModifier"/>
         <!-- Java 21+ has useful implicit classes -->
         <exclude name="UnnecessaryFullyQualifiedName"/>
+        <!-- Test methods with getter-like names are fine -->
+        <exclude name="LinguisticNaming"/>
+        <!-- Local variables don't need final -->
+        <exclude name="LocalVariableCouldBeFinal"/>
     </rule>
 
     <rule ref="category/java/codestyle.xml/ClassNamingConventions">
@@ -60,8 +64,11 @@
         <properties>
             <property name="methodPattern" value="[a-z][a-zA-Z0-9]*"/>
             <property name="nativePattern" value="[a-z][a-zA-Z0-9]*"/>
+            <!-- Allow underscores in JUnit 5 test methods for BDD naming -->
+            <property name="junit5TestPattern" value="[a-z][a-zA-Z0-9_]*"/>
         </properties>
     </rule>
+
 
     <!-- ================================================================== -->
     <!-- DESIGN                                                             -->
