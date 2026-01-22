@@ -37,7 +37,7 @@ public class ConfigInitCommand extends BaseCommand {
             : ConfigDefaults.getUserConfigPath();
 
         if (Files.exists(targetPath) && !force) {
-            outputError("Configuration file already exists: " + targetPath);
+            outputError("Configuration file already exists: \"" + targetPath + "\"");
             outputError("Use --force to overwrite");
             return EXIT_ERROR;
         }
@@ -52,7 +52,7 @@ public class ConfigInitCommand extends BaseCommand {
             String content = generateDefaultConfig();
             Files.writeString(targetPath, content);
 
-            getOut().println("Configuration file created: " + targetPath);
+            getOut().println("Configuration file created: \"" + targetPath + "\"");
             return EXIT_SUCCESS;
 
         } catch (IOException e) {
