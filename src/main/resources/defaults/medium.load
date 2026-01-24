@@ -1,0 +1,4 @@
+# Medium load commands
+# Maximum concurrent: 8 (default)
+#
+# Empty by default - unmatched commands are classified as MEDIUM

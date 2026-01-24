@@ -16,7 +16,8 @@ import picocli.CommandLine.Spec;
     subcommands = {
         ConfigShowCommand.class,
         ConfigValidateCommand.class,
-        ConfigInitCommand.class
+        ConfigInitCommand.class,
+        ConfigInstallCommand.class
     }
 )
 public class ConfigCommand implements Runnable {

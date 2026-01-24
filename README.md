@@ -143,12 +143,15 @@ barn service status
 
 This project creates a simple CLI commandlet with sub-comands.
 
-- `barn service {start|stop|resart|reload|status|logs"}"` - manages the barn service
+- `barn service {start|stop|restart|reload|status|logs}` - manages the barn service
 - `barn run {command}` - starts job
 - `barn status` - gets the status of all jobs running
 - `barn describe {jobId}` - collects all the info from /tmp and display it
+- `barn usage {jobId}` - shows resource usage (CPU, memory, disk) for a job
 - `barn kill {jobId}` - kills a job
 - `barn clean` - performs clean up
+- `barn config install` - installs default configuration files
+- `barn config show` - shows effective configuration
 
 barn is just one binary for both the service and the client. the client uses IPC to communicate with the service.
 
@@ -191,12 +194,13 @@ There needs to be a barn service in order to run jobs (unless you use --offline)
 
 ### Adding jobs
 
-`barn run --output=json --tag=downloading <cmd>}` takes in a command to run, starts a new process/thread, outputs the status of that job:
+`barn run --output=json --tag=downloading <cmd>` takes in a command to run, starts a new process/thread, outputs the status of that job:
 
-| File          | Description                                            |
+| Field         | Description                                            |
 |---------------|--------------------------------------------------------|
 | `job_id`      | the job of the job                                     |
 | `state`       | `queued`, `running`, `succeeded`, `failed`, `canceled` |
+| `load_level`  | `HIGH`, `MEDIUM`, or `LOW` (auto-detected or manual)   |
 | `tag`         | user defined string                                    |
 | `created_at`  | Job creation timestamp                                 |
 | `started_at`  | Execution start timestamp                              |
@@ -206,15 +210,18 @@ There needs to be a barn service in order to run jobs (unless you use --offline)
 | `pid`         | OS process ID (best-effort)                            |
 | `heartbeat`   | Last liveness update                                   |
 
-Users can tag job for the purpose of filtering using the --tag=string CLI option.
+Users can tag jobs for the purpose of filtering using the `--tag=string` CLI option.
 
-Developers can use the --offline command line option to test how the service behaves eg creating tmp files etc. This runs the same code as the service but without having to run the service
+Jobs are automatically assigned a **load level** based on the command being run (see [Load Levels](#load-levels)). You can override this with `--load-level={high|medium|low}`.
+
+Developers can use the `--offline` command line option to test how the service behaves (e.g., creating tmp files). This runs the same code as the service but without having to run the service.
 
 **Example: `barn run --output=json -- echo "Hello World"`**
 ```json
 {
   "id" : "job-6d368040",
   "state" : "QUEUED",
+  "loadLevel" : "MEDIUM",
   "command" : [ "echo", "Hello World" ],
   "tag" : null,
   "createdAt" : "2026-01-22T01:48:46.749629Z",
@@ -236,12 +243,21 @@ Developers can use the --offline command line option to test how the service beh
 
 `barn status` gets the status of all jobs found in /tmp.
 
+**Example: `barn status`**
+```
+ID            STATE      LOAD    TAG  CREATED              EXIT  PID
+job-6d368040  succeeded  medium  -    2026-01-22 01:48:46  0     17486
+
+Total: 1 job (1 succeeded)
+```
+
 **Example: `barn status --output=json`**
 ```json
 {
   "jobs" : [ {
     "id" : "job-6d368040",
     "state" : "SUCCEEDED",
+    "loadLevel" : "MEDIUM",
     "command" : [ "echo", "Hello World" ],
     "tag" : null,
     "createdAt" : "2026-01-22T01:48:46.739979Z",
@@ -306,6 +322,55 @@ Developers can use the --offline command line option to test how the service beh
 ### Clean up jobs
 `barn clean` - removes completed jobs and cleans up old jobs (older than max_age config) from /tmp
 
+---
+
+## Load Levels
+
+Barn supports **per-level job limits** to allow concurrent execution of different types of jobs. For example, you can run multiple downloads while transcoding without overwhelming the system.
+
+### Load Level Types
+
+| Level | Default Max | Use Case |
+|-------|-------------|----------|
+| HIGH | 2 | CPU/GPU intensive (transcoding, encoding) |
+| MEDIUM | 8 | General purpose commands |
+| LOW | 32 | Network/IO intensive (downloads, uploads) |
+
+### Auto-Classification
+
+Jobs are automatically classified based on whitelist files in `/etc/barn/`:
+
+- `high.load` - ffmpeg, ffprobe, handbrake, x264, x265, etc.
+- `medium.load` - general commands (default if not matched)
+- `low.load` - curl, wget, rclone, rsync, aria2c, etc.
+
+### Manual Override
+
+Force a specific load level for a job:
+
+```bash
+# Run ffmpeg as LOW load (bypass normal HIGH classification)
+barn run --load-level=low -- ffmpeg -i input.mp4 output.mp4
+
+# Run curl as HIGH load (override normal LOW classification)
+barn run --load-level=high -- curl -O https://example.com/file.zip
+```
+
+### Installing Default Config
+
+Install default configuration files including load level whitelists:
+
+```bash
+# Preview what would be installed
+barn config install --show
+
+# Install to system config directory (requires sudo on Linux/macOS)
+sudo barn config install --force
+```
+
+See [Configuration](docs/config.md) for detailed load level configuration options.
+
+---
 
 ## Documentation
 

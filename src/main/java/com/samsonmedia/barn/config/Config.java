@@ -9,12 +9,14 @@ import java.util.Objects;
  * @param jobs job execution configuration
  * @param cleanup automatic cleanup configuration
  * @param storage storage and filesystem configuration
+ * @param loadLevels per-load-level job limits configuration
  */
 public record Config(
     ServiceConfig service,
     JobsConfig jobs,
     CleanupConfig cleanup,
-    StorageConfig storage
+    StorageConfig storage,
+    LoadLevelConfig loadLevels
 ) {
 
     /**
@@ -25,6 +27,7 @@ public record Config(
         Objects.requireNonNull(jobs, "jobs must not be null");
         Objects.requireNonNull(cleanup, "cleanup must not be null");
         Objects.requireNonNull(storage, "storage must not be null");
+        Objects.requireNonNull(loadLevels, "loadLevels must not be null");
     }
 
     /**
@@ -37,7 +40,8 @@ public record Config(
             ServiceConfig.withDefaults(),
             JobsConfig.withDefaults(),
             CleanupConfig.withDefaults(),
-            StorageConfig.withDefaults()
+            StorageConfig.withDefaults(),
+            LoadLevelConfig.withDefaults()
         );
     }
 }

@@ -1,0 +1,16 @@
+# High load commands - CPU/GPU intensive (transcoding, encoding)
+# Maximum concurrent: 2 (default)
+#
+# Format:
+#   - Binary name: ffmpeg (matches any path ending with this executable)
+#   - Full path: /usr/local/bin/ffmpeg
+#   - Directory: /opt/encoders/ (trailing slash = match any executable in this directory)
+
+ffmpeg
+ffprobe
+handbrake
+HandBrakeCLI
+x264
+x265
+av1an
+svt-av1

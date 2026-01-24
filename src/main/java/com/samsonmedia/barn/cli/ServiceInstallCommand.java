@@ -19,10 +19,12 @@ import picocli.CommandLine.Option;
  *
  * <p>Supports platform-specific service installation:
  * <ul>
- *   <li>macOS: launchd (LaunchDaemons/LaunchAgents)</li>
- *   <li>Linux: systemd (planned)</li>
- *   <li>Windows: Windows Service (planned)</li>
+ *   <li>macOS: launchd (LaunchDaemons)</li>
+ *   <li>Linux: systemd</li>
+ *   <li>Windows: Windows Service</li>
  * </ul>
+ *
+ * <p>System-wide installation requires root/administrator privileges.
  */
 @Command(
     name = "install",
@@ -32,9 +34,6 @@ import picocli.CommandLine.Option;
 public class ServiceInstallCommand extends BaseCommand {
 
     private static final BarnLogger LOG = BarnLogger.getLogger(ServiceInstallCommand.class);
-
-    @Option(names = {"--user"}, description = "Install as user service instead of system-wide")
-    private boolean userService;
 
     @Option(names = {"--barn-dir"}, description = "Barn data directory")
     private Path barnDir;
@@ -72,12 +71,11 @@ public class ServiceInstallCommand extends BaseCommand {
 
             // Generate and write plist
             String plistContent = launchd.generatePlist(effectiveBinaryPath, effectiveBarnDir);
-            Path plistPath = userService ? launchd.getUserAgentPath() : launchd.getSystemDaemonPath();
+            Path plistPath = launchd.getSystemDaemonPath();
 
             // Check if we need sudo for system-wide installation
-            if (!userService && !canWriteToPath(plistPath.getParent())) {
-                outputError("System-wide installation requires root privileges. "
-                    + "Run with sudo or use --user for user-level installation.");
+            if (!canWriteToPath(plistPath.getParent())) {
+                outputError("System-wide installation requires root privileges. Run with sudo.");
                 return EXIT_ERROR;
             }
 
@@ -86,10 +84,9 @@ public class ServiceInstallCommand extends BaseCommand {
             // Load the service
             launchd.load(plistPath);
 
-            String serviceType = userService ? "user agent" : "system daemon";
-            getOut().println("Barn installed as macOS " + serviceType);
+            getOut().println("Barn installed as macOS system daemon");
             getOut().println("Plist location: " + plistPath);
-            getOut().println("Service will start automatically on login/boot.");
+            getOut().println("Service will start automatically on boot.");
             getOut().println();
             getOut().println("To start now: barn service start");
             getOut().println("To uninstall: barn service uninstall");
@@ -114,7 +111,7 @@ public class ServiceInstallCommand extends BaseCommand {
         SystemdManager systemd = new SystemdManager();
 
         // Check if already installed
-        Path unitPath = userService ? systemd.getUserServicePath() : systemd.getSystemServicePath();
+        Path unitPath = systemd.getSystemServicePath();
         if (Files.exists(unitPath)) {
             outputError("Barn service is already installed. Use 'barn service uninstall' first.");
             return EXIT_ERROR;
@@ -128,24 +125,22 @@ public class ServiceInstallCommand extends BaseCommand {
             Files.createDirectories(effectiveBarnDir);
             Files.createDirectories(effectiveBarnDir.resolve("logs"));
 
-            // Generate and write unit file
-            String unitContent = systemd.generateUnitFile(effectiveBinaryPath, effectiveBarnDir, userService);
+            // Generate and write unit file (system-wide, not user)
+            String unitContent = systemd.generateUnitFile(effectiveBinaryPath, effectiveBarnDir, false);
 
             // Check if we need sudo for system-wide installation
-            if (!userService && !canWriteToPath(unitPath.getParent())) {
-                outputError("System-wide installation requires root privileges. "
-                    + "Run with sudo or use --user for user-level installation.");
+            if (!canWriteToPath(unitPath.getParent())) {
+                outputError("System-wide installation requires root privileges. Run with sudo.");
                 return EXIT_ERROR;
             }
 
             systemd.writeUnitFile(unitPath, unitContent);
 
-            // Reload systemd and enable the service
-            systemd.daemonReload(userService);
-            systemd.enable(userService);
+            // Reload systemd and enable the service (system-wide)
+            systemd.daemonReload(false);
+            systemd.enable(false);
 
-            String serviceType = userService ? "user service" : "system service";
-            getOut().println("Barn installed as Linux " + serviceType);
+            getOut().println("Barn installed as Linux system service");
             getOut().println("Unit file: " + unitPath);
             getOut().println("Service will start automatically on boot.");
             getOut().println();

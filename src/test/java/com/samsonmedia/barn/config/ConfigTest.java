@@ -222,13 +222,15 @@ class ConfigTest {
                 ServiceConfig.withDefaults(),
                 JobsConfig.withDefaults(),
                 CleanupConfig.withDefaults(),
-                StorageConfig.withDefaults()
+                StorageConfig.withDefaults(),
+                LoadLevelConfig.withDefaults()
             );
 
             assertThat(config.service()).isNotNull();
             assertThat(config.jobs()).isNotNull();
             assertThat(config.cleanup()).isNotNull();
             assertThat(config.storage()).isNotNull();
+            assertThat(config.loadLevels()).isNotNull();
         }
 
         @Test
@@ -237,7 +239,8 @@ class ConfigTest {
                 null,
                 JobsConfig.withDefaults(),
                 CleanupConfig.withDefaults(),
-                StorageConfig.withDefaults()))
+                StorageConfig.withDefaults(),
+                LoadLevelConfig.withDefaults()))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("service");
         }
@@ -248,9 +251,22 @@ class ConfigTest {
                 ServiceConfig.withDefaults(),
                 null,
                 CleanupConfig.withDefaults(),
-                StorageConfig.withDefaults()))
+                StorageConfig.withDefaults(),
+                LoadLevelConfig.withDefaults()))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessageContaining("jobs");
+        }
+
+        @Test
+        void constructor_withNullLoadLevels_shouldThrowException() {
+            assertThatThrownBy(() -> new Config(
+                ServiceConfig.withDefaults(),
+                JobsConfig.withDefaults(),
+                CleanupConfig.withDefaults(),
+                StorageConfig.withDefaults(),
+                null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessageContaining("loadLevels");
         }
 
         @Test
@@ -261,6 +277,7 @@ class ConfigTest {
             assertThat(config.jobs()).isNotNull();
             assertThat(config.cleanup()).isNotNull();
             assertThat(config.storage()).isNotNull();
+            assertThat(config.loadLevels()).isNotNull();
         }
     }
 }

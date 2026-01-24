@@ -6,13 +6,13 @@ This document describes the configuration file format and options for the Barn j
 
 ## Configuration File Location
 
-Barn looks for configuration in the following locations (in order):
+Barn uses system-wide configuration only:
 
 | Platform | Path |
 |----------|------|
-| Linux    | `/etc/barn/barn.conf` or `~/.config/barn/barn.conf` |
-| macOS    | `/etc/barn/barn.conf` or `~/Library/Application Support/barn/barn.conf` |
-| Windows  | `%PROGRAMDATA%\barn\barn.conf` or `%APPDATA%\barn\barn.conf` |
+| Linux    | `/etc/barn/barn.conf` |
+| macOS    | `/etc/barn/barn.conf` |
+| Windows  | `%PROGRAMDATA%\barn\barn.conf` |
 
 You can also specify a config file explicitly:
 
@@ -29,9 +29,13 @@ Barn uses a simple key-value format (TOML-like):
 ```toml
 [service]
 log_level = "info"
-max_concurrent_jobs = 4
 heartbeat_interval_seconds = 5
 ipc_socket = "/tmp/barn/barn.sock"
+
+[load_levels]
+max_high_jobs = 2
+max_medium_jobs = 8
+max_low_jobs = 32
 
 [jobs]
 default_timeout_seconds = 3600
@@ -57,10 +61,145 @@ max_disk_usage_gb = 50
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `log_level` | string | `"info"` | Logging verbosity: `debug`, `info`, `warn`, `error` |
-| `max_concurrent_jobs` | integer | `4` | Maximum jobs running simultaneously |
+| `max_concurrent_jobs` | integer | `4` | **Deprecated.** Use `[load_levels]` instead. |
 | `heartbeat_interval_seconds` | integer | `5` | How often running jobs update their heartbeat |
 | `ipc_socket` | string | platform-specific | Path to the IPC socket for CLI communication |
 | `stale_heartbeat_threshold_seconds` | integer | `30` | Heartbeat age before a job is considered orphaned |
+
+---
+
+## Load Level Settings
+
+Barn supports **per-level job limits** to allow concurrent execution of different types of jobs. For example, you can run multiple downloads (LOW load) while transcoding (HIGH load) without overwhelming the system.
+
+### Configuration
+
+```toml
+[load_levels]
+max_high_jobs = 2
+max_medium_jobs = 8
+max_low_jobs = 32
+```
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `max_high_jobs` | integer | `2` | Maximum concurrent HIGH load jobs (CPU/GPU intensive) |
+| `max_medium_jobs` | integer | `8` | Maximum concurrent MEDIUM load jobs |
+| `max_low_jobs` | integer | `32` | Maximum concurrent LOW load jobs (network/IO intensive) |
+
+### Load Level Classification
+
+Jobs are automatically classified into a load level based on **whitelist files** in the config directory. These files use a gitignore-style format.
+
+#### Whitelist File Locations
+
+| Platform | Directory |
+|----------|-----------|
+| Linux    | `/etc/barn/` |
+| macOS    | `/etc/barn/` |
+| Windows  | `%PROGRAMDATA%\barn\` |
+
+#### Whitelist Files
+
+| File | Purpose |
+|------|---------|
+| `high.load` | CPU/GPU intensive commands (transcoding, encoding) |
+| `medium.load` | General purpose commands |
+| `low.load` | Network/IO intensive commands (downloads, uploads) |
+
+#### File Format
+
+```
+# Comments start with #
+# Empty lines are ignored
+
+# Match by executable name (any path)
+ffmpeg
+curl
+
+# Match by full path
+/usr/local/bin/custom-transcoder
+
+# Match any executable in a directory (trailing slash)
+/opt/encoders/
+```
+
+#### Example `high.load`
+
+```
+# High load commands - CPU/GPU intensive (transcoding, encoding)
+# Maximum concurrent: 2 (default)
+ffmpeg
+ffprobe
+handbrake
+HandBrakeCLI
+x264
+x265
+av1an
+svt-av1
+```
+
+#### Example `low.load`
+
+```
+# Low load commands - Network/IO intensive (downloads, uploads)
+# Maximum concurrent: 32 (default)
+curl
+wget
+rclone
+rsync
+aria2c
+scp
+sftp
+cadaver
+```
+
+#### Classification Priority
+
+1. Commands are checked against HIGH whitelist first
+2. Then MEDIUM whitelist
+3. Then LOW whitelist
+4. If no match, defaults to **MEDIUM**
+
+### Manual Load Level Override
+
+You can override the auto-detected load level per job:
+
+```bash
+# Force a command to run as LOW load
+barn run --load-level=low -- ffmpeg -i input.mp4 output.mp4
+
+# Force a command to run as HIGH load
+barn run --load-level=high -- curl -O https://example.com/file.zip
+```
+
+### Installing Default Config Files
+
+Use `barn config install` to create default configuration files:
+
+```bash
+# Interactive installation (prompts for confirmation)
+barn config install
+
+# Force installation without prompts
+barn config install --force
+
+# Show what would be installed without writing
+barn config install --show
+```
+
+This creates:
+- `barn.conf` - Main configuration file
+- `high.load` - High load whitelist (ffmpeg, etc.)
+- `medium.load` - Medium load whitelist (empty)
+- `low.load` - Low load whitelist (curl, wget, etc.)
+
+### Backward Compatibility
+
+When `[load_levels]` is not configured:
+- The deprecated `max_concurrent_jobs` value is distributed proportionally across levels
+- Ratio: 1 HIGH : 4 MEDIUM : 16 LOW
+- Example: `max_concurrent_jobs = 21` → HIGH=1, MEDIUM=4, LOW=16
 
 ---
 
@@ -251,7 +390,11 @@ Pattern: `BARN_<SECTION>_<KEY>` (uppercase, underscores)
 ```toml
 [service]
 log_level = "debug"
-max_concurrent_jobs = 2
+
+[load_levels]
+max_high_jobs = 1
+max_medium_jobs = 2
+max_low_jobs = 4
 
 [jobs]
 max_retries = 1
@@ -269,8 +412,12 @@ keep_failed_jobs = false
 ```toml
 [service]
 log_level = "warn"
-max_concurrent_jobs = 8
 heartbeat_interval_seconds = 10
+
+[load_levels]
+max_high_jobs = 4
+max_medium_jobs = 16
+max_low_jobs = 64
 
 [jobs]
 max_retries = 5
@@ -291,7 +438,12 @@ max_disk_usage_gb = 200
 
 ```toml
 [service]
-max_concurrent_jobs = 1
+log_level = "info"
+
+[load_levels]
+max_high_jobs = 1
+max_medium_jobs = 1
+max_low_jobs = 1
 
 [jobs]
 max_retries = 0
@@ -327,7 +479,24 @@ Settings that require a full restart:
 
 ---
 
-## Validating Configuration
+## Configuration Commands
+
+### Install Default Configuration
+
+Create default configuration files in the system config directory:
+
+```bash
+# Interactive installation (prompts for confirmation)
+barn config install
+
+# Install without prompts
+barn config install --force
+
+# Preview what would be installed
+barn config install --show
+```
+
+### Validate Configuration
 
 Check your config file for errors:
 
@@ -335,6 +504,8 @@ Check your config file for errors:
 barn config validate
 barn config validate --config /path/to/barn.conf
 ```
+
+### Show Configuration
 
 Show effective configuration (with defaults and overrides):
 

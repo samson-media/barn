@@ -21,6 +21,8 @@ import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.ipc.IpcServer;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.jobs.LoadLevel;
+import com.samsonmedia.barn.jobs.LoadLevelClassifier;
 import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.logging.LoggingConfig;
 import com.samsonmedia.barn.state.BarnDirectories;
@@ -48,6 +50,7 @@ public class BarnService {
     private final JobScheduler scheduler;
     private final CleanupScheduler cleanupScheduler;
     private final CrashRecovery crashRecovery;
+    private final LoadLevelClassifier loadLevelClassifier;
     private final CountDownLatch shutdownLatch;
     private final AtomicBoolean running;
     private final ObjectMapper objectMapper;
@@ -70,6 +73,9 @@ public class BarnService {
         Duration heartbeatThreshold = Duration.ofSeconds(config.service().staleHeartbeatThresholdSeconds());
         HeartbeatChecker heartbeatChecker = new HeartbeatChecker(heartbeatThreshold);
         this.crashRecovery = new CrashRecovery(repository, heartbeatChecker, dirs, config);
+
+        // Load classifier from config directory (if .load files exist)
+        this.loadLevelClassifier = LoadLevelClassifier.loadFromConfigDir();
 
         this.shutdownLatch = new CountDownLatch(1);
         this.running = new AtomicBoolean(false);
@@ -316,9 +322,10 @@ public class BarnService {
 
         @SuppressWarnings("unchecked")
         List<String> command = (List<String>) map.get("command");
-        String tag = (String) map.get("tag");
-        Integer maxRetries = (Integer) map.get("maxRetries");
-        Integer retryDelaySeconds = (Integer) map.get("retryDelaySeconds");
+        final String tag = (String) map.get("tag");
+        final String loadLevelStr = (String) map.get("loadLevel");
+        final Integer maxRetries = (Integer) map.get("maxRetries");
+        final Integer retryDelaySeconds = (Integer) map.get("retryDelaySeconds");
 
         if (command == null || command.isEmpty()) {
             throw new IpcException("INVALID_REQUEST", "Command is required");
@@ -335,8 +342,18 @@ public class BarnService {
             );
         }
 
-        Job job = repository.create(command, tag, jobsConfig);
-        LOG.info("Created job via IPC: {}", job.id());
+        // Determine load level: use explicit override, or auto-classify
+        LoadLevel loadLevel;
+        if (loadLevelStr != null) {
+            loadLevel = LoadLevel.fromString(loadLevelStr);
+            LOG.debug("Using explicit load level: {}", loadLevel);
+        } else {
+            loadLevel = loadLevelClassifier.classify(command);
+            LOG.debug("Auto-classified command as load level: {}", loadLevel);
+        }
+
+        Job job = repository.create(command, tag, jobsConfig, loadLevel);
+        LOG.info("Created job via IPC: {} (level={})", job.id(), loadLevel);
         return job;
     }
 

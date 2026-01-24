@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import com.samsonmedia.barn.config.JobsConfig;
+import com.samsonmedia.barn.config.LoadLevelConfig;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
 import com.samsonmedia.barn.state.BarnDirectories;
@@ -189,13 +190,15 @@ class JobSchedulerTest {
 
         @Test
         void getStatus_whenNotRunning_shouldShowNotRunning() {
+            // Legacy constructor with maxConcurrentJobs=2 creates config with 1 HIGH + 2 MEDIUM + 1 LOW = 4 total
             scheduler = new JobScheduler(repository, runner, dirs, 2,
                 Duration.ofMillis(100), Duration.ofSeconds(5));
 
             JobScheduler.SchedulerStatus status = scheduler.getStatus();
 
             assertThat(status.isRunning()).isFalse();
-            assertThat(status.maxConcurrentJobs()).isEqualTo(2);
+            assertThat(status.maxConcurrentJobs()).isEqualTo(4); // 1 + 2 + 1
+            assertThat(status.maxMediumJobs()).isEqualTo(2); // The configured value
         }
 
         @Test
@@ -278,6 +281,56 @@ class JobSchedulerTest {
             assertThat(status.queuedJobs()).isEqualTo(10);
             assertThat(status.maxConcurrentJobs()).isEqualTo(8);
             assertThat(status.isRunning()).isTrue();
+        }
+
+        @Test
+        void schedulerStatus_withPerLevelFields_shouldContainAllFields() {
+            JobScheduler.SchedulerStatus status = new JobScheduler.SchedulerStatus(
+                10, 5, 42, true, 2, 5, 3, 4, 8, 30);
+
+            assertThat(status.runningJobs()).isEqualTo(10);
+            assertThat(status.queuedJobs()).isEqualTo(5);
+            assertThat(status.maxConcurrentJobs()).isEqualTo(42);
+            assertThat(status.isRunning()).isTrue();
+            assertThat(status.runningHighJobs()).isEqualTo(2);
+            assertThat(status.runningMediumJobs()).isEqualTo(5);
+            assertThat(status.runningLowJobs()).isEqualTo(3);
+            assertThat(status.maxHighJobs()).isEqualTo(4);
+            assertThat(status.maxMediumJobs()).isEqualTo(8);
+            assertThat(status.maxLowJobs()).isEqualTo(30);
+        }
+    }
+
+    @Nested
+    class PerLevelScheduling {
+
+        @Test
+        void constructor_withLoadLevelConfig_shouldUsePerLevelLimits() throws IOException {
+            LoadLevelConfig levelConfig = new LoadLevelConfig(2, 4, 8);
+            scheduler = new JobScheduler(repository, runner, dirs, levelConfig,
+                Duration.ofMillis(100), Duration.ofSeconds(5));
+
+            JobScheduler.SchedulerStatus status = scheduler.getStatus();
+
+            assertThat(status.maxHighJobs()).isEqualTo(2);
+            assertThat(status.maxMediumJobs()).isEqualTo(4);
+            assertThat(status.maxLowJobs()).isEqualTo(8);
+            assertThat(status.maxConcurrentJobs()).isEqualTo(14); // 2 + 4 + 8
+        }
+
+        @Test
+        void getStatus_shouldReportPerLevelRunningCounts() throws IOException {
+            LoadLevelConfig levelConfig = new LoadLevelConfig(2, 4, 8);
+            scheduler = new JobScheduler(repository, runner, dirs, levelConfig,
+                Duration.ofMillis(100), Duration.ofSeconds(5));
+
+            JobScheduler.SchedulerStatus status = scheduler.getStatus();
+
+            // Initially no jobs are running
+            assertThat(status.runningHighJobs()).isZero();
+            assertThat(status.runningMediumJobs()).isZero();
+            assertThat(status.runningLowJobs()).isZero();
+            assertThat(status.runningJobs()).isZero();
         }
     }
 

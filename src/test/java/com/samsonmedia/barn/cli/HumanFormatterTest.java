@@ -1,5 +1,6 @@
 package com.samsonmedia.barn.cli;
 
+import static com.samsonmedia.barn.jobs.LoadLevel.MEDIUM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
@@ -50,6 +51,8 @@ class HumanFormatterTest {
             assertThat(result).contains("Job: job-12345678");
             assertThat(result).contains("State:");
             assertThat(result).contains("running");
+            assertThat(result).contains("Load:");
+            assertThat(result).contains("medium");
             assertThat(result).contains("Tag:");
             assertThat(result).contains("test-tag");
         }
@@ -115,11 +118,13 @@ class HumanFormatterTest {
 
             assertThat(result).contains("ID");
             assertThat(result).contains("STATE");
+            assertThat(result).contains("LOAD");
             assertThat(result).contains("TAG");
             assertThat(result).contains("job-11111111");
             assertThat(result).contains("job-22222222");
             assertThat(result).contains("running");
             assertThat(result).contains("queued");
+            assertThat(result).contains("medium");
         }
 
         @Test
@@ -195,7 +200,8 @@ class HumanFormatterTest {
             state == JobState.RUNNING ? 12345L : null,
             null,
             0,
-            null
+            null,
+            MEDIUM
         );
     }
 
@@ -213,7 +219,8 @@ class HumanFormatterTest {
             null,
             null,
             0,
-            null
+            null,
+            MEDIUM
         );
     }
 
@@ -231,7 +238,8 @@ class HumanFormatterTest {
             null,
             null,
             0,
-            null
+            null,
+            MEDIUM
         );
     }
 }

@@ -53,7 +53,7 @@ public class JobRepository {
     }
 
     /**
-     * Creates a new job with the given command and configuration.
+     * Creates a new job with the given command and configuration using default load level.
      *
      * @param command the command to execute
      * @param tag optional user tag (may be null)
@@ -62,11 +62,27 @@ public class JobRepository {
      * @throws IOException if creation fails
      */
     public Job create(List<String> command, String tag, JobsConfig config) throws IOException {
+        return create(command, tag, config, LoadLevel.getDefault());
+    }
+
+    /**
+     * Creates a new job with the given command, configuration, and load level.
+     *
+     * @param command the command to execute
+     * @param tag optional user tag (may be null)
+     * @param config the jobs configuration for defaults
+     * @param loadLevel the load level classification for this job
+     * @return the created Job
+     * @throws IOException if creation fails
+     */
+    public Job create(List<String> command, String tag, JobsConfig config, LoadLevel loadLevel)
+            throws IOException {
         Objects.requireNonNull(command, "command must not be null");
         Objects.requireNonNull(config, "config must not be null");
+        Objects.requireNonNull(loadLevel, "loadLevel must not be null");
 
         String id = JobIdGenerator.generate();
-        JobManifest manifest = JobManifest.create(id, command, tag, config);
+        JobManifest manifest = JobManifest.create(id, command, tag, config, loadLevel);
 
         // Create directories
         dirs.createJobDirs(id);
@@ -86,7 +102,7 @@ public class JobRepository {
         stateFiles.writeRetryCount(0);
 
         LOG.info("Created job: {}", id);
-        return Job.createQueued(id, command, tag);
+        return Job.createQueued(id, command, tag, loadLevel);
     }
 
     /**
@@ -388,6 +404,12 @@ public class JobRepository {
         StateFiles stateFiles = new StateFiles(jobDir);
         JobManifest manifest = loadManifest(id);
 
+        // For backward compatibility, use manifest's loadLevel (which defaults to MEDIUM)
+        // if no loadLevel field exists in manifest (old jobs)
+        LoadLevel loadLevel = manifest.loadLevel() != null
+            ? manifest.loadLevel()
+            : LoadLevel.getDefault();
+
         return new Job(
             id,
             stateFiles.readState().orElse(JobState.QUEUED),
@@ -401,7 +423,8 @@ public class JobRepository {
             stateFiles.readPid().isPresent() ? stateFiles.readPid().getAsLong() : null,
             stateFiles.readHeartbeat().orElse(null),
             stateFiles.readRetryCount().orElse(0),
-            stateFiles.readRetryAt().orElse(null)
+            stateFiles.readRetryAt().orElse(null),
+            loadLevel
         );
     }
 }

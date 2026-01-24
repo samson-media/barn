@@ -1,5 +1,6 @@
 package com.samsonmedia.barn.jobs;
 
+import static com.samsonmedia.barn.jobs.LoadLevel.MEDIUM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -23,7 +24,7 @@ class JobManifestTest {
             List.of("echo", "hello"),
             "test-tag",
             now,
-            3, 30, 2.0
+            3, 30, 2.0, MEDIUM
         );
 
         assertThat(manifest.id()).isEqualTo("job-12345");
@@ -38,7 +39,7 @@ class JobManifestTest {
     @Test
     void constructor_withNullId_shouldThrowException() {
         assertThatThrownBy(() -> new JobManifest(
-            null, List.of("echo"), null, Instant.now(), 3, 30, 2.0))
+            null, List.of("echo"), null, Instant.now(), 3, 30, 2.0, MEDIUM))
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("id");
     }
@@ -46,7 +47,7 @@ class JobManifestTest {
     @Test
     void constructor_withBlankId_shouldThrowException() {
         assertThatThrownBy(() -> new JobManifest(
-            "  ", List.of("echo"), null, Instant.now(), 3, 30, 2.0))
+            "  ", List.of("echo"), null, Instant.now(), 3, 30, 2.0, MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("blank");
     }
@@ -54,7 +55,7 @@ class JobManifestTest {
     @Test
     void constructor_withEmptyCommand_shouldThrowException() {
         assertThatThrownBy(() -> new JobManifest(
-            "job-12345", List.of(), null, Instant.now(), 3, 30, 2.0))
+            "job-12345", List.of(), null, Instant.now(), 3, 30, 2.0, MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("empty");
     }
@@ -62,7 +63,7 @@ class JobManifestTest {
     @Test
     void constructor_withNegativeMaxRetries_shouldThrowException() {
         assertThatThrownBy(() -> new JobManifest(
-            "job-12345", List.of("echo"), null, Instant.now(), -1, 30, 2.0))
+            "job-12345", List.of("echo"), null, Instant.now(), -1, 30, 2.0, MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("maxRetries");
     }
@@ -70,7 +71,7 @@ class JobManifestTest {
     @Test
     void constructor_withNegativeRetryDelay_shouldThrowException() {
         assertThatThrownBy(() -> new JobManifest(
-            "job-12345", List.of("echo"), null, Instant.now(), 3, -1, 2.0))
+            "job-12345", List.of("echo"), null, Instant.now(), 3, -1, 2.0, MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("retryDelaySeconds");
     }
@@ -78,7 +79,7 @@ class JobManifestTest {
     @Test
     void constructor_withBackoffMultiplierLessThanOne_shouldThrowException() {
         assertThatThrownBy(() -> new JobManifest(
-            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 0.5))
+            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 0.5, MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("retryBackoffMultiplier");
     }
@@ -107,7 +108,7 @@ class JobManifestTest {
     @Test
     void calculateRetryDelay_shouldUseExponentialBackoff() {
         JobManifest manifest = new JobManifest(
-            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 2.0);
+            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 2.0, MEDIUM);
 
         assertThat(manifest.calculateRetryDelay(0)).isEqualTo(30);  // 30 * 2^0
         assertThat(manifest.calculateRetryDelay(1)).isEqualTo(60);  // 30 * 2^1
@@ -117,7 +118,7 @@ class JobManifestTest {
     @Test
     void calculateRetryDelay_withNegativeCount_shouldThrowException() {
         JobManifest manifest = new JobManifest(
-            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 2.0);
+            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 2.0, MEDIUM);
 
         assertThatThrownBy(() -> manifest.calculateRetryDelay(-1))
             .isInstanceOf(IllegalArgumentException.class);
@@ -126,7 +127,7 @@ class JobManifestTest {
     @Test
     void canRetry_withRetriesAvailable_shouldReturnTrue() {
         JobManifest manifest = new JobManifest(
-            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 2.0);
+            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 2.0, MEDIUM);
 
         assertThat(manifest.canRetry(0)).isTrue();
         assertThat(manifest.canRetry(1)).isTrue();
@@ -136,7 +137,7 @@ class JobManifestTest {
     @Test
     void canRetry_withNoRetriesLeft_shouldReturnFalse() {
         JobManifest manifest = new JobManifest(
-            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 2.0);
+            "job-12345", List.of("echo"), null, Instant.now(), 3, 30, 2.0, MEDIUM);
 
         assertThat(manifest.canRetry(3)).isFalse();
         assertThat(manifest.canRetry(4)).isFalse();
@@ -145,7 +146,7 @@ class JobManifestTest {
     @Test
     void canRetry_withZeroMaxRetries_shouldAlwaysReturnFalse() {
         JobManifest manifest = new JobManifest(
-            "job-12345", List.of("echo"), null, Instant.now(), 0, 30, 2.0);
+            "job-12345", List.of("echo"), null, Instant.now(), 0, 30, 2.0, MEDIUM);
 
         assertThat(manifest.canRetry(0)).isFalse();
     }

@@ -112,11 +112,12 @@ class ConfigCommandTest {
         }
 
         @Test
-        void show_withNonExistentConfig_shouldShowDefaultsMessage() {
-            int exitCode = cmd.execute("config", "show");
+        void show_withDefaults_shouldShowDefaultsIndicator() {
+            // Using --defaults explicitly shows the default values indicator
+            int exitCode = cmd.execute("config", "show", "--defaults");
 
             assertThat(exitCode).isZero();
-            assertThat(outWriter.toString()).contains("(none found, using defaults)");
+            assertThat(outWriter.toString()).contains("Showing default values");
         }
 
         @Test

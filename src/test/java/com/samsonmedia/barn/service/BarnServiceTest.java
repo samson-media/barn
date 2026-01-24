@@ -14,6 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
 import com.samsonmedia.barn.config.CleanupConfig;
 import com.samsonmedia.barn.config.Config;
 import com.samsonmedia.barn.config.JobsConfig;
+import com.samsonmedia.barn.config.LoadLevelConfig;
 import com.samsonmedia.barn.config.LogLevel;
 import com.samsonmedia.barn.config.ServiceConfig;
 import com.samsonmedia.barn.config.StorageConfig;
@@ -45,7 +46,8 @@ class BarnServiceTest {
         CleanupConfig cleanupConfig = new CleanupConfig(false, 60, 24, false, 168);
         StorageConfig storageConfig = new StorageConfig(tempDir, 50, false);
 
-        config = new Config(serviceConfig, jobsConfig, cleanupConfig, storageConfig);
+        config = new Config(serviceConfig, jobsConfig, cleanupConfig, storageConfig,
+            LoadLevelConfig.withDefaults());
     }
 
     @Test

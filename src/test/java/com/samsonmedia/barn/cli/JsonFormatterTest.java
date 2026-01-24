@@ -1,5 +1,6 @@
 package com.samsonmedia.barn.cli;
 
+import static com.samsonmedia.barn.jobs.LoadLevel.MEDIUM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
@@ -195,7 +196,8 @@ class JsonFormatterTest {
             state == JobState.RUNNING ? 12345L : null,
             null,
             0,
-            null
+            null,
+            MEDIUM
         );
     }
 }

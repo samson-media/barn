@@ -209,7 +209,7 @@ public class JobRunner {
             job.id(), job.state(), job.command(), job.tag(),
             job.createdAt(), job.startedAt(), job.finishedAt(),
             exitCode, job.error(), job.pid(), job.heartbeat(),
-            job.retryCount(), job.retryAt()
+            job.retryCount(), job.retryAt(), job.loadLevel()
         );
         return retryCalculator.shouldRetry(jobWithExitCode);
     }

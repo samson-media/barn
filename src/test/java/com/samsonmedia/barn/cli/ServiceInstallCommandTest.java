@@ -50,7 +50,8 @@ class ServiceInstallCommandTest {
             int exitCode = cmd.execute("service", "install", "--help");
             assertThat(exitCode).isEqualTo(0);
             assertThat(stdout.toString()).contains("Install Barn as a system service");
-            assertThat(stdout.toString()).contains("--user");
+            assertThat(stdout.toString()).contains("--binary");
+            assertThat(stdout.toString()).contains("--barn-dir");
         }
 
         @Test
@@ -81,7 +82,6 @@ class ServiceInstallCommandTest {
             int exitCode = cmd.execute("service", "uninstall", "--help");
             assertThat(exitCode).isEqualTo(0);
             assertThat(stdout.toString()).contains("Uninstall Barn system service");
-            assertThat(stdout.toString()).contains("--user");
             assertThat(stdout.toString()).contains("--force");
         }
     }

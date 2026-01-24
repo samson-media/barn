@@ -1,5 +1,6 @@
 package com.samsonmedia.barn.jobs;
 
+import static com.samsonmedia.barn.jobs.LoadLevel.MEDIUM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -23,7 +24,7 @@ class JobTest {
             List.of("echo", "hello"),
             "test-tag",
             Instant.now(),
-            null, null, null, null, null, null, 0, null
+            null, null, null, null, null, null, 0, null, MEDIUM
         );
 
         assertThat(job.id()).isEqualTo("job-12345");
@@ -36,7 +37,7 @@ class JobTest {
     void constructor_withNullId_shouldThrowException() {
         assertThatThrownBy(() -> new Job(
             null, JobState.QUEUED, List.of("echo"), null,
-            Instant.now(), null, null, null, null, null, null, 0, null))
+            Instant.now(), null, null, null, null, null, null, 0, null, MEDIUM))
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("id");
     }
@@ -45,7 +46,7 @@ class JobTest {
     void constructor_withBlankId_shouldThrowException() {
         assertThatThrownBy(() -> new Job(
             "  ", JobState.QUEUED, List.of("echo"), null,
-            Instant.now(), null, null, null, null, null, null, 0, null))
+            Instant.now(), null, null, null, null, null, null, 0, null, MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("blank");
     }
@@ -54,7 +55,7 @@ class JobTest {
     void constructor_withNullState_shouldThrowException() {
         assertThatThrownBy(() -> new Job(
             "job-12345", null, List.of("echo"), null,
-            Instant.now(), null, null, null, null, null, null, 0, null))
+            Instant.now(), null, null, null, null, null, null, 0, null, MEDIUM))
             .isInstanceOf(NullPointerException.class)
             .hasMessageContaining("state");
     }
@@ -63,7 +64,7 @@ class JobTest {
     void constructor_withEmptyCommand_shouldThrowException() {
         assertThatThrownBy(() -> new Job(
             "job-12345", JobState.QUEUED, List.of(), null,
-            Instant.now(), null, null, null, null, null, null, 0, null))
+            Instant.now(), null, null, null, null, null, null, 0, null, MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("empty");
     }
@@ -72,7 +73,7 @@ class JobTest {
     void constructor_withNegativeRetryCount_shouldThrowException() {
         assertThatThrownBy(() -> new Job(
             "job-12345", JobState.QUEUED, List.of("echo"), null,
-            Instant.now(), null, null, null, null, null, null, -1, null))
+            Instant.now(), null, null, null, null, null, null, -1, null, MEDIUM))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("retryCount");
     }
@@ -230,5 +231,30 @@ class JobTest {
 
         assertThat(queued.isQueued()).isTrue();
         assertThat(running.isQueued()).isFalse();
+    }
+
+    @Test
+    void createQueued_shouldDefaultToMediumLoadLevel() {
+        Job job = Job.createQueued("job-12345", List.of("echo", "test"), "my-tag");
+
+        assertThat(job.loadLevel()).isEqualTo(LoadLevel.MEDIUM);
+    }
+
+    @Test
+    void createQueued_withLoadLevel_shouldUseSpecifiedLevel() {
+        Job job = Job.createQueued("job-12345", List.of("ffmpeg", "-i", "input.mp4"),
+            "transcode", LoadLevel.HIGH);
+
+        assertThat(job.loadLevel()).isEqualTo(LoadLevel.HIGH);
+    }
+
+    @Test
+    void withLoadLevel_shouldCreateCopyWithNewLoadLevel() {
+        Job original = Job.createQueued("job-12345", List.of("echo"), null);
+
+        Job updated = original.withLoadLevel(LoadLevel.LOW);
+
+        assertThat(updated.loadLevel()).isEqualTo(LoadLevel.LOW);
+        assertThat(original.loadLevel()).isEqualTo(LoadLevel.MEDIUM); // Original unchanged
     }
 }

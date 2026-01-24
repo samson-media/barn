@@ -78,6 +78,44 @@ public final class ConfigDefaults {
     }
 
     /**
+     * Gets the system-wide configuration directory path.
+     *
+     * @return the system config directory
+     */
+    public static Path getSystemConfigDir() {
+        return switch (OperatingSystem.current()) {
+            case WINDOWS -> {
+                String programData = System.getenv("PROGRAMDATA");
+                if (programData == null || programData.isBlank()) {
+                    programData = "C:\\ProgramData";
+                }
+                yield Path.of(programData, "barn");
+            }
+            case LINUX, MACOS -> Path.of("/etc/barn");
+        };
+    }
+
+    /**
+     * Gets the user-specific configuration directory path.
+     *
+     * @return the user config directory
+     */
+    public static Path getUserConfigDir() {
+        String userHome = System.getProperty("user.home", "");
+        return switch (OperatingSystem.current()) {
+            case WINDOWS -> {
+                String appData = System.getenv("APPDATA");
+                if (appData == null || appData.isBlank()) {
+                    appData = Path.of(userHome, "AppData", "Roaming").toString();
+                }
+                yield Path.of(appData, "barn");
+            }
+            case MACOS -> Path.of(userHome, "Library", "Application Support", "barn");
+            case LINUX -> Path.of(userHome, ".config", "barn");
+        };
+    }
+
+    /**
      * Gets the list of configuration file paths in priority order.
      *
      * <p>Paths are returned in order of increasing priority - later paths

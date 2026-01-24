@@ -195,14 +195,15 @@ public class StatusCommand extends BaseCommand {
             .max().orElse(3));
 
         // Header
-        sb.append(String.format("%-" + idWidth + "s  %-9s  %-" + tagWidth + "s  %-19s  %-4s  %-8s%n",
-            "ID", "STATE", "TAG", "CREATED", "EXIT", "PID"));
+        sb.append(String.format("%-" + idWidth + "s  %-9s  %-6s  %-" + tagWidth + "s  %-19s  %-4s  %-8s%n",
+            "ID", "STATE", "LOAD", "TAG", "CREATED", "EXIT", "PID"));
 
         // Rows
         for (Job job : jobs) {
-            sb.append(String.format("%-" + idWidth + "s  %-9s  %-" + tagWidth + "s  %-19s  %-4s  %-8s%n",
+            sb.append(String.format("%-" + idWidth + "s  %-9s  %-6s  %-" + tagWidth + "s  %-19s  %-4s  %-8s%n",
                 job.id(),
                 job.state().toString().toLowerCase(Locale.ROOT),
+                job.loadLevel().toString().toLowerCase(Locale.ROOT),
                 job.tag() != null ? job.tag() : "-",
                 formatTimestamp(job.createdAt()),
                 job.exitCode() != null ? job.exitCode().toString() : "-",

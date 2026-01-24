@@ -25,6 +25,7 @@ import com.samsonmedia.barn.state.JobState;
  * @param heartbeat last liveness check timestamp
  * @param retryCount current retry attempt (0-based)
  * @param retryAt when to retry (null if not scheduled for retry)
+ * @param loadLevel the load level classification for this job
  */
 public record Job(
     String id,
@@ -39,7 +40,8 @@ public record Job(
     Long pid,
     Instant heartbeat,
     int retryCount,
-    Instant retryAt
+    Instant retryAt,
+    LoadLevel loadLevel
 ) {
 
     /**
@@ -50,6 +52,7 @@ public record Job(
         Objects.requireNonNull(state, "state must not be null");
         Objects.requireNonNull(command, "command must not be null");
         Objects.requireNonNull(createdAt, "createdAt must not be null");
+        Objects.requireNonNull(loadLevel, "loadLevel must not be null");
         if (id.isBlank()) {
             throw new IllegalArgumentException("id must not be blank");
         }
@@ -68,9 +71,22 @@ public record Job(
      * @param id the job ID
      * @param command the command to execute
      * @param tag optional tag (may be null)
-     * @return a new Job in QUEUED state
+     * @return a new Job in QUEUED state with MEDIUM load level
      */
     public static Job createQueued(String id, List<String> command, String tag) {
+        return createQueued(id, command, tag, LoadLevel.getDefault());
+    }
+
+    /**
+     * Creates a new queued job with specified load level.
+     *
+     * @param id the job ID
+     * @param command the command to execute
+     * @param tag optional tag (may be null)
+     * @param loadLevel the load level for this job
+     * @return a new Job in QUEUED state
+     */
+    public static Job createQueued(String id, List<String> command, String tag, LoadLevel loadLevel) {
         return new Job(
             id,
             JobState.QUEUED,
@@ -84,7 +100,8 @@ public record Job(
             null,  // pid
             null,  // heartbeat
             0,     // retryCount
-            null   // retryAt
+            null,  // retryAt
+            loadLevel
         );
     }
 
@@ -96,7 +113,18 @@ public record Job(
      */
     public Job withState(JobState newState) {
         return new Job(id, newState, command, tag, createdAt, startedAt, finishedAt,
-            exitCode, error, pid, heartbeat, retryCount, retryAt);
+            exitCode, error, pid, heartbeat, retryCount, retryAt, loadLevel);
+    }
+
+    /**
+     * Creates a copy of this job with a new load level.
+     *
+     * @param newLoadLevel the new load level
+     * @return a new Job with the updated load level
+     */
+    public Job withLoadLevel(LoadLevel newLoadLevel) {
+        return new Job(id, state, command, tag, createdAt, startedAt, finishedAt,
+            exitCode, error, pid, heartbeat, retryCount, retryAt, newLoadLevel);
     }
 
     /**
@@ -108,7 +136,7 @@ public record Job(
     public Job withStarted(long processId) {
         Instant now = Instant.now();
         return new Job(id, JobState.RUNNING, command, tag, createdAt, now, finishedAt,
-            exitCode, error, processId, now, retryCount, retryAt);
+            exitCode, error, processId, now, retryCount, retryAt, loadLevel);
     }
 
     /**
@@ -121,7 +149,7 @@ public record Job(
     public Job withCompleted(int code, String errorMessage) {
         JobState newState = (code == 0) ? JobState.SUCCEEDED : JobState.FAILED;
         return new Job(id, newState, command, tag, createdAt, startedAt, Instant.now(),
-            code, errorMessage, pid, heartbeat, retryCount, retryAt);
+            code, errorMessage, pid, heartbeat, retryCount, retryAt, loadLevel);
     }
 
     /**
@@ -132,7 +160,7 @@ public record Job(
      */
     public Job withHeartbeat(Instant timestamp) {
         return new Job(id, state, command, tag, createdAt, startedAt, finishedAt,
-            exitCode, error, pid, timestamp, retryCount, retryAt);
+            exitCode, error, pid, timestamp, retryCount, retryAt, loadLevel);
     }
 
     /**
@@ -143,7 +171,7 @@ public record Job(
      */
     public Job withRetry(Instant retryTimestamp) {
         return new Job(id, JobState.QUEUED, command, tag, createdAt, null, null,
-            null, null, null, null, retryCount + 1, retryTimestamp);
+            null, null, null, null, retryCount + 1, retryTimestamp, loadLevel);
     }
 
     /**
@@ -153,7 +181,7 @@ public record Job(
      */
     public Job withCanceled() {
         return new Job(id, JobState.CANCELED, command, tag, createdAt, startedAt, Instant.now(),
-            exitCode, "Job was canceled", pid, heartbeat, retryCount, retryAt);
+            exitCode, "Job was canceled", pid, heartbeat, retryCount, retryAt, loadLevel);
     }
 
     /**

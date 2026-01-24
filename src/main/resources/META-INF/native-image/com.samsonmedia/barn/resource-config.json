@@ -3,7 +3,8 @@
     "includes": [
       {"pattern": "logback.xml"},
       {"pattern": "version.properties"},
-      {"pattern": "META-INF/.*"}
+      {"pattern": "META-INF/.*"},
+      {"pattern": "defaults/.*"}
     ]
   },
   "bundles": []

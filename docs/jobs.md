@@ -78,6 +78,7 @@ Example:
   manifest.json
   state
   stage
+  load_level
   pid
   heartbeat
   exit_code
@@ -121,6 +122,7 @@ Written once at job creation.
 |---------------|--------------------------------------------------------|
 | `state`       | `queued`, `running`, `succeeded`, `failed`, `canceled` |
 | `tag`         | user defined string                                    |
+| `load_level`  | `HIGH`, `MEDIUM`, or `LOW` (for scheduling priority)   |
 | `created_at`  | Job creation timestamp                                 |
 | `started_at`  | Execution start timestamp                              |
 | `finished_at` | Execution end timestamp                                |
@@ -280,6 +282,7 @@ Contains daemon-level events, not job output.
   manifest.json
   state        → running
   stage        → transcode
+  load_level   → HIGH
   pid          → 12345
   heartbeat    → 2026-01-21T18:42:10Z
   started_at   → 2026-01-21T18:40:01Z

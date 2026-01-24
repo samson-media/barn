@@ -1,5 +1,6 @@
 package com.samsonmedia.barn.logging;
 
+import static com.samsonmedia.barn.jobs.LoadLevel.MEDIUM;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -200,7 +201,8 @@ class JobLogEventsTest {
             null,  // pid
             null,  // heartbeat
             0,     // retryCount
-            null   // retryAt
+            null,  // retryAt
+            MEDIUM
         );
     }
 
@@ -218,7 +220,8 @@ class JobLogEventsTest {
             pid,
             Instant.now(),  // heartbeat
             0,              // retryCount
-            null            // retryAt
+            null,           // retryAt
+            MEDIUM
         );
     }
 
@@ -236,7 +239,8 @@ class JobLogEventsTest {
             null,           // pid
             null,           // heartbeat
             0,              // retryCount
-            null            // retryAt
+            null,           // retryAt
+            MEDIUM
         );
     }
 }

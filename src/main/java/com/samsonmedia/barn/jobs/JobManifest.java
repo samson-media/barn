@@ -19,6 +19,7 @@ import com.samsonmedia.barn.config.JobsConfig;
  * @param maxRetries maximum number of retry attempts
  * @param retryDelaySeconds initial delay before first retry
  * @param retryBackoffMultiplier multiplier for exponential backoff
+ * @param loadLevel the load level classification for this job
  */
 public record JobManifest(
     String id,
@@ -27,7 +28,8 @@ public record JobManifest(
     Instant createdAt,
     int maxRetries,
     int retryDelaySeconds,
-    double retryBackoffMultiplier
+    double retryBackoffMultiplier,
+    LoadLevel loadLevel
 ) {
 
     /**
@@ -37,6 +39,7 @@ public record JobManifest(
         Objects.requireNonNull(id, "id must not be null");
         Objects.requireNonNull(command, "command must not be null");
         Objects.requireNonNull(createdAt, "createdAt must not be null");
+        Objects.requireNonNull(loadLevel, "loadLevel must not be null");
         if (id.isBlank()) {
             throw new IllegalArgumentException("id must not be blank");
         }
@@ -62,9 +65,24 @@ public record JobManifest(
      * @param command the command to execute
      * @param tag optional tag (may be null)
      * @param config the jobs configuration for defaults
-     * @return a new JobManifest
+     * @return a new JobManifest with MEDIUM load level
      */
     public static JobManifest create(String id, List<String> command, String tag, JobsConfig config) {
+        return create(id, command, tag, config, LoadLevel.getDefault());
+    }
+
+    /**
+     * Creates a JobManifest with default retry configuration from JobsConfig.
+     *
+     * @param id the job ID
+     * @param command the command to execute
+     * @param tag optional tag (may be null)
+     * @param config the jobs configuration for defaults
+     * @param loadLevel the load level for this job
+     * @return a new JobManifest
+     */
+    public static JobManifest create(String id, List<String> command, String tag,
+                                     JobsConfig config, LoadLevel loadLevel) {
         Objects.requireNonNull(config, "config must not be null");
         return new JobManifest(
             id,
@@ -73,7 +91,8 @@ public record JobManifest(
             Instant.now(),
             config.maxRetries(),
             config.retryDelaySeconds(),
-            config.retryBackoffMultiplier()
+            config.retryBackoffMultiplier(),
+            loadLevel
         );
     }
 
@@ -86,10 +105,29 @@ public record JobManifest(
      * @param maxRetries maximum retry attempts
      * @param retryDelaySeconds initial retry delay
      * @param retryBackoffMultiplier backoff multiplier
-     * @return a new JobManifest
+     * @return a new JobManifest with MEDIUM load level
      */
     public static JobManifest create(String id, List<String> command, String tag,
                                      int maxRetries, int retryDelaySeconds, double retryBackoffMultiplier) {
+        return create(id, command, tag, maxRetries, retryDelaySeconds, retryBackoffMultiplier,
+            LoadLevel.getDefault());
+    }
+
+    /**
+     * Creates a JobManifest with custom retry configuration and load level.
+     *
+     * @param id the job ID
+     * @param command the command to execute
+     * @param tag optional tag (may be null)
+     * @param maxRetries maximum retry attempts
+     * @param retryDelaySeconds initial retry delay
+     * @param retryBackoffMultiplier backoff multiplier
+     * @param loadLevel the load level for this job
+     * @return a new JobManifest
+     */
+    public static JobManifest create(String id, List<String> command, String tag,
+                                     int maxRetries, int retryDelaySeconds, double retryBackoffMultiplier,
+                                     LoadLevel loadLevel) {
         return new JobManifest(
             id,
             command,
@@ -97,7 +135,8 @@ public record JobManifest(
             Instant.now(),
             maxRetries,
             retryDelaySeconds,
-            retryBackoffMultiplier
+            retryBackoffMultiplier,
+            loadLevel
         );
     }
 

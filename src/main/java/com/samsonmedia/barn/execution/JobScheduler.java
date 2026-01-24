@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -15,8 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.samsonmedia.barn.config.Config;
+import com.samsonmedia.barn.config.LoadLevelConfig;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.jobs.LoadLevel;
 import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.BarnDirectories;
 import com.samsonmedia.barn.state.JobState;
@@ -36,12 +40,12 @@ public class JobScheduler {
     private final JobRepository repository;
     private final JobRunner runner;
     private final BarnDirectories dirs;
-    private final int maxConcurrentJobs;
+    private final LoadLevelConfig loadLevelConfig;
     private final Duration pollInterval;
     private final Duration shutdownTimeout;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
-    private final AtomicInteger runningJobCount = new AtomicInteger(0);
+    private final Map<LoadLevel, AtomicInteger> runningJobCounts;
 
     private ExecutorService jobExecutor;
     private ScheduledExecutorService schedulerThread;
@@ -61,13 +65,17 @@ public class JobScheduler {
             BarnDirectories dirs,
             Config config) {
         this(repository, runner, dirs,
-            config.service().maxConcurrentJobs(),
+            config.loadLevels(),
             DEFAULT_POLL_INTERVAL,
             DEFAULT_SHUTDOWN_TIMEOUT);
     }
 
     /**
-     * Creates a JobScheduler with custom settings.
+     * Creates a JobScheduler with custom settings using legacy single-limit mode.
+     *
+     * <p>In legacy mode, all jobs are treated as MEDIUM load level, and the
+     * maxConcurrentJobs limit applies only to MEDIUM jobs. HIGH and LOW levels
+     * use their default limits.
      *
      * @param repository the job repository
      * @param runner the job runner
@@ -75,7 +83,9 @@ public class JobScheduler {
      * @param maxConcurrentJobs the maximum number of concurrent jobs
      * @param pollInterval the interval between queue checks
      * @param shutdownTimeout the maximum time to wait for shutdown
+     * @deprecated Use the constructor with LoadLevelConfig instead
      */
+    @Deprecated
     public JobScheduler(
             JobRepository repository,
             JobRunner runner,
@@ -83,19 +93,49 @@ public class JobScheduler {
             int maxConcurrentJobs,
             Duration pollInterval,
             Duration shutdownTimeout) {
+        this(repository, runner, dirs,
+            createLegacyConfig(maxConcurrentJobs),
+            pollInterval,
+            shutdownTimeout);
+    }
+
+    private static LoadLevelConfig createLegacyConfig(int maxConcurrentJobs) {
+        if (maxConcurrentJobs <= 0) {
+            throw new IllegalArgumentException("maxConcurrentJobs must be positive: " + maxConcurrentJobs);
+        }
+        // In legacy mode, apply limit to MEDIUM only, use minimum for others
+        return new LoadLevelConfig(1, maxConcurrentJobs, 1);
+    }
+
+    /**
+     * Creates a JobScheduler with per-level limits.
+     *
+     * @param repository the job repository
+     * @param runner the job runner
+     * @param dirs the directory manager
+     * @param loadLevelConfig the per-level job limits
+     * @param pollInterval the interval between queue checks
+     * @param shutdownTimeout the maximum time to wait for shutdown
+     */
+    public JobScheduler(
+            JobRepository repository,
+            JobRunner runner,
+            BarnDirectories dirs,
+            LoadLevelConfig loadLevelConfig,
+            Duration pollInterval,
+            Duration shutdownTimeout) {
         this.repository = Objects.requireNonNull(repository, "repository must not be null");
         this.runner = Objects.requireNonNull(runner, "runner must not be null");
         this.dirs = Objects.requireNonNull(dirs, "dirs must not be null");
-        this.maxConcurrentJobs = validatePositive(maxConcurrentJobs, "maxConcurrentJobs");
+        this.loadLevelConfig = Objects.requireNonNull(loadLevelConfig, "loadLevelConfig must not be null");
         this.pollInterval = Objects.requireNonNull(pollInterval, "pollInterval must not be null");
         this.shutdownTimeout = Objects.requireNonNull(shutdownTimeout, "shutdownTimeout must not be null");
-    }
 
-    private static int validatePositive(int value, String name) {
-        if (value <= 0) {
-            throw new IllegalArgumentException(name + " must be positive: " + value);
+        // Initialize per-level running job counts
+        this.runningJobCounts = new EnumMap<>(LoadLevel.class);
+        for (LoadLevel level : LoadLevel.values()) {
+            runningJobCounts.put(level, new AtomicInteger(0));
         }
-        return value;
     }
 
     /**
@@ -118,8 +158,10 @@ public class JobScheduler {
         }
         lock = acquired.get();
 
+        int totalMaxJobs = loadLevelConfig.getTotalMaxJobs();
+
         // Create executors
-        jobExecutor = Executors.newFixedThreadPool(maxConcurrentJobs, r -> {
+        jobExecutor = Executors.newFixedThreadPool(totalMaxJobs, r -> {
             Thread t = new Thread(r, "job-executor");
             t.setDaemon(true);
             return t;
@@ -141,7 +183,11 @@ public class JobScheduler {
             TimeUnit.MILLISECONDS
         );
 
-        LOG.info("Scheduler started with max {} concurrent jobs", maxConcurrentJobs);
+        LOG.info("Scheduler started with per-level limits: HIGH={}, MEDIUM={}, LOW={} (total={})",
+            loadLevelConfig.maxHighJobs(),
+            loadLevelConfig.maxMediumJobs(),
+            loadLevelConfig.maxLowJobs(),
+            totalMaxJobs);
     }
 
     /**
@@ -241,11 +287,21 @@ public class JobScheduler {
             LOG.warn("Failed to count queued jobs: {}", e.getMessage());
         }
 
+        int totalRunning = runningJobCounts.values().stream()
+            .mapToInt(AtomicInteger::get)
+            .sum();
+
         return new SchedulerStatus(
-            runningJobCount.get(),
+            totalRunning,
             queuedCount,
-            maxConcurrentJobs,
-            running.get()
+            loadLevelConfig.getTotalMaxJobs(),
+            running.get(),
+            runningJobCounts.get(LoadLevel.HIGH).get(),
+            runningJobCounts.get(LoadLevel.MEDIUM).get(),
+            runningJobCounts.get(LoadLevel.LOW).get(),
+            loadLevelConfig.maxHighJobs(),
+            loadLevelConfig.maxMediumJobs(),
+            loadLevelConfig.maxLowJobs()
         );
     }
 
@@ -264,64 +320,91 @@ public class JobScheduler {
         }
 
         try {
-            // Check if we have capacity
-            int currentRunning = runningJobCount.get();
-            if (currentRunning >= maxConcurrentJobs) {
-                return;
-            }
-
-            // Find next queued job
-            Optional<Job> nextJob = findNextQueued();
+            // Find next queued job that has capacity in its load level
+            Optional<Job> nextJob = findNextQueuedWithCapacity();
             if (nextJob.isEmpty()) {
                 return;
             }
 
             Job job = nextJob.get();
+            LoadLevel level = job.loadLevel();
 
             // Check if job is ready (not scheduled for later retry)
             if (job.retryAt() != null && job.retryAt().isAfter(Instant.now())) {
                 return;
             }
 
-            // Increment count and submit
-            runningJobCount.incrementAndGet();
+            // Increment count for this level and submit
+            runningJobCounts.get(level).incrementAndGet();
 
             jobExecutor.submit(() -> {
                 try {
                     runner.run(job);
                 } finally {
-                    runningJobCount.decrementAndGet();
+                    runningJobCounts.get(level).decrementAndGet();
                 }
             });
 
-            LOG.debug("Scheduled job: {}", job.id());
+            LOG.debug("Scheduled job: {} (level={})", job.id(), level);
 
         } catch (IOException e) {
             LOG.error("Error in scheduler: {}", e.getMessage(), e);
         }
     }
 
-    private Optional<Job> findNextQueued() throws IOException {
+    private Optional<Job> findNextQueuedWithCapacity() throws IOException {
         List<Job> queuedJobs = repository.findByState(JobState.QUEUED);
 
-        // Sort by creation time (FIFO)
+        // Sort by creation time (FIFO) and filter by retry time and capacity
         return queuedJobs.stream()
             .filter(job -> job.retryAt() == null || !job.retryAt().isAfter(Instant.now()))
+            .filter(this::hasCapacityForLevel)
             .min(Comparator.comparing(Job::createdAt));
+    }
+
+    private boolean hasCapacityForLevel(Job job) {
+        LoadLevel level = job.loadLevel();
+        int currentRunning = runningJobCounts.get(level).get();
+        int maxForLevel = loadLevelConfig.getMaxJobsFor(level);
+        return currentRunning < maxForLevel;
     }
 
     /**
      * Status of the job scheduler.
      *
-     * @param runningJobs the number of currently running jobs
+     * @param runningJobs the total number of currently running jobs
      * @param queuedJobs the number of queued jobs
-     * @param maxConcurrentJobs the maximum concurrent job limit
+     * @param maxConcurrentJobs the total maximum concurrent job limit
      * @param isRunning whether the scheduler is running
+     * @param runningHighJobs running HIGH load level jobs
+     * @param runningMediumJobs running MEDIUM load level jobs
+     * @param runningLowJobs running LOW load level jobs
+     * @param maxHighJobs maximum HIGH load level jobs
+     * @param maxMediumJobs maximum MEDIUM load level jobs
+     * @param maxLowJobs maximum LOW load level jobs
      */
     public record SchedulerStatus(
         int runningJobs,
         int queuedJobs,
         int maxConcurrentJobs,
-        boolean isRunning
-    ) { }
+        boolean isRunning,
+        int runningHighJobs,
+        int runningMediumJobs,
+        int runningLowJobs,
+        int maxHighJobs,
+        int maxMediumJobs,
+        int maxLowJobs
+    ) {
+        /**
+         * Creates a SchedulerStatus with only legacy fields (for backward compatibility).
+         *
+         * @param runningJobs the total number of currently running jobs
+         * @param queuedJobs the number of queued jobs
+         * @param maxConcurrentJobs the total maximum concurrent job limit
+         * @param isRunning whether the scheduler is running
+         */
+        public SchedulerStatus(int runningJobs, int queuedJobs, int maxConcurrentJobs, boolean isRunning) {
+            this(runningJobs, queuedJobs, maxConcurrentJobs, isRunning, 0, 0, 0, 0, 0, 0);
+        }
+    }
 }

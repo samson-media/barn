@@ -83,6 +83,39 @@ class JobRepositoryTest {
 
             assertThat(job.tag()).isNull();
         }
+
+        @Test
+        void create_shouldDefaultToMediumLoadLevel() throws IOException {
+            Job job = repository.create(List.of("echo"), null, config);
+
+            assertThat(job.loadLevel()).isEqualTo(LoadLevel.MEDIUM);
+        }
+
+        @Test
+        void create_withLoadLevel_shouldUseSpecifiedLevel() throws IOException {
+            Job job = repository.create(List.of("ffmpeg", "-version"), null, config, LoadLevel.HIGH);
+
+            assertThat(job.loadLevel()).isEqualTo(LoadLevel.HIGH);
+        }
+
+        @Test
+        void create_withLoadLevel_shouldPersistInManifest() throws IOException {
+            Job job = repository.create(List.of("curl", "-h"), null, config, LoadLevel.LOW);
+
+            Path manifestPath = dirs.getJobDir(job.id()).resolve("manifest.json");
+            String content = Files.readString(manifestPath);
+            assertThat(content).contains("\"loadLevel\" : \"LOW\"");
+        }
+
+        @Test
+        void create_withLoadLevel_shouldBeReadableByFindById() throws IOException {
+            Job created = repository.create(List.of("wget"), null, config, LoadLevel.LOW);
+
+            Optional<Job> found = repository.findById(created.id());
+
+            assertThat(found).isPresent();
+            assertThat(found.get().loadLevel()).isEqualTo(LoadLevel.LOW);
+        }
     }
 
     @Nested

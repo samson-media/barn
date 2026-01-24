@@ -18,9 +18,11 @@ import picocli.CommandLine.Option;
  * <p>Removes platform-specific service registration:
  * <ul>
  *   <li>macOS: launchd plist files</li>
- *   <li>Linux: systemd unit files (planned)</li>
- *   <li>Windows: Windows Service registration (planned)</li>
+ *   <li>Linux: systemd unit files</li>
+ *   <li>Windows: Windows Service registration</li>
  * </ul>
+ *
+ * <p>System-wide uninstallation requires root/administrator privileges.
  */
 @Command(
     name = "uninstall",
@@ -30,9 +32,6 @@ import picocli.CommandLine.Option;
 public class ServiceUninstallCommand extends BaseCommand {
 
     private static final BarnLogger LOG = BarnLogger.getLogger(ServiceUninstallCommand.class);
-
-    @Option(names = {"--user"}, description = "Uninstall user service instead of system-wide")
-    private boolean userService;
 
     @Option(names = {"--force"}, description = "Force uninstall even if service is running")
     private boolean force;
@@ -51,27 +50,17 @@ public class ServiceUninstallCommand extends BaseCommand {
     private int uninstallMacOs() {
         LaunchdManager launchd = new LaunchdManager();
 
-        Path plistPath = userService ? launchd.getUserAgentPath() : launchd.getSystemDaemonPath();
+        Path plistPath = launchd.getSystemDaemonPath();
 
         // Check if installed
         if (!Files.exists(plistPath)) {
-            if (userService) {
-                // Try system daemon if user service not found
-                Path systemPath = launchd.getSystemDaemonPath();
-                if (Files.exists(systemPath)) {
-                    getOut().println("No user service found, but system daemon exists.");
-                    getOut().println("Run without --user to uninstall system daemon.");
-                    return EXIT_ERROR;
-                }
-            }
             outputError("Barn service is not installed");
             return EXIT_ERROR;
         }
 
         // Check if we need sudo for system-wide uninstallation
-        if (!userService && !canWriteToPath(plistPath)) {
-            outputError("System-wide uninstallation requires root privileges. "
-                + "Run with sudo or use --user for user-level service.");
+        if (!canWriteToPath(plistPath)) {
+            outputError("System-wide uninstallation requires root privileges. Run with sudo.");
             return EXIT_ERROR;
         }
 
@@ -98,8 +87,7 @@ public class ServiceUninstallCommand extends BaseCommand {
                 }
             }
 
-            String serviceType = userService ? "user agent" : "system daemon";
-            getOut().println("Barn " + serviceType + " uninstalled successfully");
+            getOut().println("Barn system daemon uninstalled successfully");
             getOut().println("Removed: " + plistPath);
 
             return EXIT_SUCCESS;
@@ -117,35 +105,25 @@ public class ServiceUninstallCommand extends BaseCommand {
         }
 
         SystemdManager systemd = new SystemdManager();
-        Path unitPath = userService ? systemd.getUserServicePath() : systemd.getSystemServicePath();
+        Path unitPath = systemd.getSystemServicePath();
 
         // Check if installed
         if (!Files.exists(unitPath)) {
-            if (userService) {
-                // Try system service if user service not found
-                Path systemPath = systemd.getSystemServicePath();
-                if (Files.exists(systemPath)) {
-                    getOut().println("No user service found, but system service exists.");
-                    getOut().println("Run without --user to uninstall system service.");
-                    return EXIT_ERROR;
-                }
-            }
             outputError("Barn service is not installed");
             return EXIT_ERROR;
         }
 
         // Check if we need sudo for system-wide uninstallation
-        if (!userService && !canWriteToPath(unitPath)) {
-            outputError("System-wide uninstallation requires root privileges. "
-                + "Run with sudo or use --user for user-level service.");
+        if (!canWriteToPath(unitPath)) {
+            outputError("System-wide uninstallation requires root privileges. Run with sudo.");
             return EXIT_ERROR;
         }
 
         try {
-            // Stop and disable the service first
-            if (systemd.isActive(userService)) {
+            // Stop and disable the service first (system-wide)
+            if (systemd.isActive(false)) {
                 try {
-                    systemd.stop(userService);
+                    systemd.stop(false);
                 } catch (SystemdManager.SystemdException e) {
                     if (!force) {
                         outputError("Failed to stop service: " + e.getMessage()
@@ -156,9 +134,9 @@ public class ServiceUninstallCommand extends BaseCommand {
                 }
             }
 
-            if (systemd.isEnabled(userService)) {
+            if (systemd.isEnabled(false)) {
                 try {
-                    systemd.disable(userService);
+                    systemd.disable(false);
                 } catch (SystemdManager.SystemdException e) {
                     LOG.warn("Failed to disable service: {}", e.getMessage());
                 }
@@ -172,15 +150,14 @@ public class ServiceUninstallCommand extends BaseCommand {
                 }
             }
 
-            // Reload systemd
+            // Reload systemd (system-wide)
             try {
-                systemd.daemonReload(userService);
+                systemd.daemonReload(false);
             } catch (SystemdManager.SystemdException e) {
                 LOG.warn("Failed to reload systemd: {}", e.getMessage());
             }
 
-            String serviceType = userService ? "user service" : "system service";
-            getOut().println("Barn " + serviceType + " uninstalled successfully");
+            getOut().println("Barn system service uninstalled successfully");
             getOut().println("Removed: " + unitPath);
 
             return EXIT_SUCCESS;

@@ -186,11 +186,17 @@ public final class ConfigLoader {
     }
 
     private Config buildConfig(Map<String, Map<String, Object>> data) {
+        // Handle both "load_levels" (from TOML) and "loadlevels" (from env vars)
+        Map<String, Object> loadLevelData = data.getOrDefault("load_levels", Map.of());
+        if (loadLevelData.isEmpty()) {
+            loadLevelData = data.getOrDefault("loadlevels", Map.of());
+        }
         return new Config(
             buildServiceConfig(data.getOrDefault("service", Map.of())),
             buildJobsConfig(data.getOrDefault("jobs", Map.of())),
             buildCleanupConfig(data.getOrDefault("cleanup", Map.of())),
-            buildStorageConfig(data.getOrDefault("storage", Map.of()))
+            buildStorageConfig(data.getOrDefault("storage", Map.of())),
+            buildLoadLevelConfig(loadLevelData)
         );
     }
 
@@ -247,6 +253,17 @@ public final class ConfigLoader {
                 this::toInt),
             getOrDefault(data, "preserve_work_dir", StorageConfig.DEFAULT_PRESERVE_WORK_DIR,
                 this::toBoolean)
+        );
+    }
+
+    private LoadLevelConfig buildLoadLevelConfig(Map<String, Object> data) {
+        return new LoadLevelConfig(
+            getOrDefault(data, "max_high_jobs", LoadLevelConfig.DEFAULT_MAX_HIGH_JOBS,
+                this::toInt),
+            getOrDefault(data, "max_medium_jobs", LoadLevelConfig.DEFAULT_MAX_MEDIUM_JOBS,
+                this::toInt),
+            getOrDefault(data, "max_low_jobs", LoadLevelConfig.DEFAULT_MAX_LOW_JOBS,
+                this::toInt)
         );
     }
 

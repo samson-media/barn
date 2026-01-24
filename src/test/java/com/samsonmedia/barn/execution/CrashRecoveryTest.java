@@ -1,5 +1,6 @@
 package com.samsonmedia.barn.execution;
 
+import static com.samsonmedia.barn.jobs.LoadLevel.MEDIUM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -212,7 +213,8 @@ class CrashRecoveryTest {
                 config.service(),
                 new JobsConfig(config.jobs().defaultTimeoutSeconds(), 0, 1, 1.0, List.of()),
                 config.cleanup(),
-                config.storage()
+                config.storage(),
+                config.loadLevels()
             );
             CrashRecovery noRetryCrashRecovery = new CrashRecovery(
                 repository, heartbeatChecker, dirs, noRetryConfig);
@@ -296,7 +298,8 @@ class CrashRecoveryTest {
             pid,
             heartbeat,
             0,  // retryCount
-            null  // retryAt
+            null,  // retryAt
+            MEDIUM
         );
     }
 }

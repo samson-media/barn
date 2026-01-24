@@ -16,6 +16,8 @@ import com.samsonmedia.barn.ipc.IpcClient;
 import com.samsonmedia.barn.ipc.IpcException;
 import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
+import com.samsonmedia.barn.jobs.LoadLevel;
+import com.samsonmedia.barn.jobs.LoadLevelClassifier;
 import com.samsonmedia.barn.logging.BarnLogger;
 import com.samsonmedia.barn.state.BarnDirectories;
 
@@ -40,6 +42,10 @@ public class RunCommand extends BaseCommand {
 
     @Option(names = {"--tag", "-t"}, description = "Tag for filtering jobs")
     private String tag;
+
+    @Option(names = {"--load-level", "-l"},
+        description = "Load level classification: ${COMPLETION-CANDIDATES} (default: auto-detect)")
+    private LoadLevel loadLevel;
 
     @Option(names = {"--max-retries"}, description = "Override max retries")
     private Integer maxRetries;
@@ -87,10 +93,19 @@ public class RunCommand extends BaseCommand {
             JobRepository repository = new JobRepository(dirs);
             JobsConfig jobsConfig = buildJobsConfig();
 
-            // Create the job
-            Job job = repository.create(command, tag, jobsConfig);
+            // Determine load level: use explicit override, or auto-classify from whitelists
+            LoadLevel level;
+            if (loadLevel != null) {
+                level = loadLevel;
+            } else {
+                level = LoadLevelClassifier.loadFromConfigDir().classify(command);
+                LOG.debug("Auto-classified command as load level: {}", level);
+            }
 
-            LOG.info("Created job {} in offline mode", job.id());
+            // Create the job
+            Job job = repository.create(command, tag, jobsConfig, level);
+
+            LOG.info("Created job {} in offline mode with load level {}", job.id(), level);
 
             // Output job info in the appropriate format
             outputJobCreated(job);
@@ -110,6 +125,9 @@ public class RunCommand extends BaseCommand {
             payload.put("command", command);
             if (tag != null) {
                 payload.put("tag", tag);
+            }
+            if (loadLevel != null) {
+                payload.put("loadLevel", loadLevel.name());
             }
             if (maxRetries != null) {
                 payload.put("maxRetries", maxRetries);

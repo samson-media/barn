@@ -1,5 +1,6 @@
 package com.samsonmedia.barn.execution;
 
+import static com.samsonmedia.barn.jobs.LoadLevel.MEDIUM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -161,7 +162,8 @@ class HeartbeatCheckerTest {
             state == JobState.RUNNING ? 12345L : null,  // pid
             heartbeat,
             0,  // retryCount
-            null  // retryAt
+            null,  // retryAt
+            MEDIUM
         );
     }
 }

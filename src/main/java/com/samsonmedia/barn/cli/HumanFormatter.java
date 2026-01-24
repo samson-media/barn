@@ -102,6 +102,7 @@ public class HumanFormatter implements OutputFormatter {
         StringBuilder sb = new StringBuilder();
         sb.append(colorize("Job: ", BOLD)).append(job.id()).append("\n");
         sb.append("  State:    ").append(colorizeState(job.state())).append("\n");
+        sb.append("  Load:     ").append(job.loadLevel().toString().toLowerCase(Locale.ROOT)).append("\n");
         sb.append("  Command:  ").append(String.join(" ", job.command())).append("\n");
 
         if (job.tag() != null) {
@@ -139,7 +140,7 @@ public class HumanFormatter implements OutputFormatter {
 
     private String formatJobTable(List<Job> jobs) {
         // Define columns
-        List<String> headers = List.of("ID", "STATE", "TAG", "CREATED", "EXIT");
+        List<String> headers = List.of("ID", "STATE", "LOAD", "TAG", "CREATED", "EXIT");
 
         // Convert jobs to rows
         List<List<String>> rows = new ArrayList<>();
@@ -147,6 +148,7 @@ public class HumanFormatter implements OutputFormatter {
             rows.add(List.of(
                 job.id(),
                 job.state().toString().toLowerCase(Locale.ROOT),
+                job.loadLevel().toString().toLowerCase(Locale.ROOT),
                 job.tag() != null ? job.tag() : "-",
                 formatTimestamp(job.createdAt()),
                 job.exitCode() != null ? job.exitCode().toString() : "-"
@@ -190,7 +192,7 @@ public class HumanFormatter implements OutputFormatter {
                 // Apply colors based on column
                 if (i == 1) {  // STATE column
                     cell = colorizeState(job.state(), cell);
-                } else if (i == 4 && !cell.trim().equals("-")) {  // EXIT column
+                } else if (i == 5 && !cell.trim().equals("-")) {  // EXIT column
                     cell = colorizeExitCode(job.exitCode(), cell);
                 }
 

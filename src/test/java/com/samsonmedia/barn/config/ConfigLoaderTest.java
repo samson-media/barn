@@ -288,6 +288,51 @@ class ConfigLoaderTest {
     }
 
     @Nested
+    class LoadLevelsConfig {
+
+        @Test
+        void load_withLoadLevels_shouldParseValues() throws IOException {
+            Path configFile = tempDir.resolve("barn.conf");
+            Files.writeString(configFile, """
+                [load_levels]
+                max_high_jobs = 4
+                max_medium_jobs = 16
+                max_low_jobs = 64
+                """);
+
+            ConfigLoader loader = new ConfigLoader(Map.of());
+            Config config = loader.loadFromFile(configFile);
+
+            assertThat(config.loadLevels().maxHighJobs()).isEqualTo(4);
+            assertThat(config.loadLevels().maxMediumJobs()).isEqualTo(16);
+            assertThat(config.loadLevels().maxLowJobs()).isEqualTo(64);
+        }
+
+        @Test
+        void load_withNoLoadLevels_shouldUseDefaults() {
+            ConfigLoader loader = new ConfigLoader(Map.of());
+            Config config = loader.load();
+
+            assertThat(config.loadLevels().maxHighJobs()).isEqualTo(2);
+            assertThat(config.loadLevels().maxMediumJobs()).isEqualTo(8);
+            assertThat(config.loadLevels().maxLowJobs()).isEqualTo(32);
+        }
+
+        @Test
+        void load_withEnvOverride_shouldOverrideLoadLevelValues() {
+            // Environment variables use BARN_LOADLEVELS_ (no underscore) because
+            // the parser splits on first underscore for section name
+            Map<String, String> env = new HashMap<>();
+            env.put("BARN_LOADLEVELS_MAX_HIGH_JOBS", "10");
+
+            ConfigLoader loader = new ConfigLoader(env);
+            Config config = loader.load();
+
+            assertThat(config.loadLevels().maxHighJobs()).isEqualTo(10);
+        }
+    }
+
+    @Nested
     class RetryOnExitCodes {
 
         @Test

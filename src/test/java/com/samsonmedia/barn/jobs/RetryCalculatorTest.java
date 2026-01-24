@@ -1,5 +1,6 @@
 package com.samsonmedia.barn.jobs;
 
+import static com.samsonmedia.barn.jobs.LoadLevel.MEDIUM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -260,7 +261,8 @@ class RetryCalculatorTest {
             12345L,
             Instant.now(),
             retryCount,
-            null
+            null,
+            MEDIUM
         );
     }
 
@@ -278,7 +280,8 @@ class RetryCalculatorTest {
             12345L,
             Instant.now(),
             retryCount,
-            null
+            null,
+            MEDIUM
         );
     }
 }
