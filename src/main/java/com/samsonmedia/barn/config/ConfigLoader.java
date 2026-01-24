@@ -186,11 +186,11 @@ public final class ConfigLoader {
     }
 
     private Config buildConfig(Map<String, Map<String, Object>> data) {
-        // Handle both "load_levels" (from TOML) and "loadlevels" (from env vars)
-        Map<String, Object> loadLevelData = data.getOrDefault("load_levels", Map.of());
-        if (loadLevelData.isEmpty()) {
-            loadLevelData = data.getOrDefault("loadlevels", Map.of());
-        }
+        // Merge both "load_levels" (from TOML) and "loadlevels" (from env vars)
+        // Env vars (loadlevels) take precedence over config file (load_levels)
+        Map<String, Object> loadLevelData = new HashMap<>(data.getOrDefault("load_levels", Map.of()));
+        loadLevelData.putAll(data.getOrDefault("loadlevels", Map.of()));
+
         return new Config(
             buildServiceConfig(data.getOrDefault("service", Map.of())),
             buildJobsConfig(data.getOrDefault("jobs", Map.of())),

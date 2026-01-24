@@ -121,6 +121,13 @@ public class ConfigShowCommand extends BaseCommand {
         sb.append(String.format("base_dir = %s%n", config.storage().baseDir()));
         sb.append(String.format("max_disk_usage_gb = %d%n", config.storage().maxDiskUsageGb()));
         sb.append(String.format("preserve_work_dir = %b%n", config.storage().preserveWorkDir()));
+        sb.append("\n");
+
+        // Load section
+        sb.append("[load]\n");
+        sb.append(String.format("max_high_jobs = %d%n", config.loadLevels().maxHighJobs()));
+        sb.append(String.format("max_medium_jobs = %d%n", config.loadLevels().maxMediumJobs()));
+        sb.append(String.format("max_low_jobs = %d%n", config.loadLevels().maxLowJobs()));
 
         getOut().println(sb.toString().trim());
     }
@@ -131,6 +138,7 @@ public class ConfigShowCommand extends BaseCommand {
         map.put("jobs", buildJobsSection(config));
         map.put("cleanup", buildCleanupSection(config));
         map.put("storage", buildStorageSection(config));
+        map.put("load", buildLoadSection(config));
         return map;
     }
 
@@ -170,5 +178,13 @@ public class ConfigShowCommand extends BaseCommand {
         storage.put("max_disk_usage_gb", config.storage().maxDiskUsageGb());
         storage.put("preserve_work_dir", config.storage().preserveWorkDir());
         return storage;
+    }
+
+    private Map<String, Object> buildLoadSection(Config config) {
+        Map<String, Object> load = new LinkedHashMap<>();
+        load.put("max_high_jobs", config.loadLevels().maxHighJobs());
+        load.put("max_medium_jobs", config.loadLevels().maxMediumJobs());
+        load.put("max_low_jobs", config.loadLevels().maxLowJobs());
+        return load;
     }
 }
