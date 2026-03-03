@@ -209,6 +209,8 @@ There needs to be a barn service in order to run jobs (unless you use --offline)
 | `error`       | Human-readable failure reason                          |
 | `pid`         | OS process ID (best-effort)                            |
 | `heartbeat`   | Last liveness update                                   |
+| `retryCount`  | Current retry attempt (0 if never retried)             |
+| `retryAt`     | Timestamp for next retry attempt (null if not retrying)|
 
 Users can tag jobs for the purpose of filtering using the `--tag=string` CLI option.
 
@@ -245,8 +247,8 @@ Developers can use the `--offline` command line option to test how the service b
 
 **Example: `barn status`**
 ```
-ID            STATE      LOAD    TAG  CREATED              EXIT  PID
-job-6d368040  succeeded  medium  -    2026-01-22 01:48:46  0     17486
+ID            STATE      LOAD    TAG  CREATED              EXIT  PID       RETRIES  NEXT RETRY
+job-6d368040  succeeded  medium  -    2026-01-22 01:48:46  0     17486     -        -
 
 Total: 1 job (1 succeeded)
 ```

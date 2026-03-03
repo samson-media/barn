@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import com.samsonmedia.barn.config.JobsConfig;
+import com.samsonmedia.barn.jobs.Job;
 import com.samsonmedia.barn.jobs.JobRepository;
 import com.samsonmedia.barn.state.BarnDirectories;
 
@@ -99,6 +102,22 @@ class StatusCommandTest {
 
             assertThat(exitCode).isZero();
             assertThat(stdout.toString().toLowerCase()).contains("queued");
+        }
+
+        @Test
+        void status_withRetryingJob_shouldShowRetryColumns() throws IOException {
+            Job job = repository.create(List.of("echo", "test"), "test", config);
+            repository.markStarted(job.id(), 12345L);
+            repository.markCompleted(job.id(), 1, "test failure");
+            Instant retryAt = Instant.now().plus(5, ChronoUnit.MINUTES);
+            repository.scheduleRetry(job.id(), retryAt);
+
+            int exitCode = cmd.execute("--offline");
+
+            assertThat(exitCode).isZero();
+            String output = stdout.toString();
+            assertThat(output).contains("RETRIES");
+            assertThat(output).contains("NEXT RETRY");
         }
     }
 

@@ -503,6 +503,7 @@ retry_delay_seconds = 5
 
 **Expected:**
 - Job retries automatically
+- `barn status` shows retry count in **RETRIES** column and next retry time in **NEXT RETRY** column
 - Eventually succeeds on 3rd attempt
 - retry_count file shows retry history
 
@@ -523,7 +524,8 @@ retry_delay_seconds = 5
 
 **Expected:**
 - Job state is "failed"
-- retry_count equals max_retries
+- **RETRIES** column shows retry count equal to max_retries
+- **NEXT RETRY** column shows `-` (no further retries)
 - No more retry attempts
 
 ---
@@ -538,7 +540,7 @@ barn status
 ```
 
 **Expected:**
-- Formatted table or list
+- Formatted table with columns: ID, STATE, LOAD, TAG, CREATED, EXIT, PID, RETRIES, NEXT RETRY
 - Human-readable timestamps
 - Clear column headers
 

@@ -80,6 +80,18 @@ class HumanFormatterTest {
         }
 
         @Test
+        void format_withRetryingJob_shouldShowRetryInfo() {
+            Job job = createRetryingJob("job-retry1234", 3,
+                Instant.parse("2026-01-15T10:30:00Z"));
+
+            String result = formatter.format(job);
+
+            assertThat(result).contains("Retries:");
+            assertThat(result).contains("3");
+            assertThat(result).contains("Retry At:");
+        }
+
+        @Test
         void format_withMap_shouldFormatKeyValues() {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("key1", "value1");
@@ -125,6 +137,18 @@ class HumanFormatterTest {
             assertThat(result).contains("running");
             assertThat(result).contains("queued");
             assertThat(result).contains("medium");
+        }
+
+        @Test
+        void formatList_withRetryingJob_shouldShowRetryColumns() {
+            List<Job> jobs = List.of(createRetryingJob("job-retry1234", 2,
+                Instant.parse("2026-01-15T10:30:00Z")));
+
+            String result = formatter.formatList(jobs);
+
+            assertThat(result).contains("RETRIES");
+            assertThat(result).contains("NEXT RETRY");
+            assertThat(result).contains("2");
         }
 
         @Test
@@ -239,6 +263,25 @@ class HumanFormatterTest {
             null,
             0,
             null,
+            MEDIUM
+        );
+    }
+
+    private Job createRetryingJob(String id, int retryCount, Instant retryAt) {
+        return new Job(
+            id,
+            JobState.QUEUED,
+            List.of("echo", "test"),
+            "tag",
+            Instant.now().minus(Duration.ofMinutes(5)),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            retryCount,
+            retryAt,
             MEDIUM
         );
     }

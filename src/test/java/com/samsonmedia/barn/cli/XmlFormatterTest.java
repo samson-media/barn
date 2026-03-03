@@ -192,7 +192,43 @@ class XmlFormatterTest {
         }
     }
 
+    @Nested
+    class RetryFields {
+
+        @Test
+        void format_withRetryingJob_shouldIncludeRetryFields() {
+            Job job = createRetryingJob("job-retry1234", 2,
+                Instant.parse("2026-01-15T10:30:00Z"));
+
+            String result = formatter.format(job);
+
+            assertThat(result).contains("<retry_count>2</retry_count>");
+            assertThat(result).contains("<retry_at>");
+            assertThat(result).contains("2026-01-15T10:30:00Z");
+            assertThat(result).contains("</retry_at>");
+        }
+    }
+
     // Helper methods
+
+    private Job createRetryingJob(String id, int retryCount, Instant retryAt) {
+        return new Job(
+            id,
+            JobState.QUEUED,
+            List.of("echo", "test"),
+            "tag",
+            Instant.now(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            retryCount,
+            retryAt,
+            MEDIUM
+        );
+    }
 
     private Job createJob(String id, JobState state, String tag) {
         return new Job(

@@ -135,12 +135,17 @@ public class HumanFormatter implements OutputFormatter {
             sb.append("  Retries:  ").append(job.retryCount()).append("\n");
         }
 
+        if (job.retryAt() != null) {
+            sb.append("  Retry At: ").append(formatTimestamp(job.retryAt())).append("\n");
+        }
+
         return sb.toString().trim();
     }
 
     private String formatJobTable(List<Job> jobs) {
         // Define columns
-        List<String> headers = List.of("ID", "STATE", "LOAD", "TAG", "CREATED", "EXIT");
+        List<String> headers = List.of(
+            "ID", "STATE", "LOAD", "TAG", "CREATED", "EXIT", "RETRIES", "NEXT RETRY");
 
         // Convert jobs to rows
         List<List<String>> rows = new ArrayList<>();
@@ -151,7 +156,9 @@ public class HumanFormatter implements OutputFormatter {
                 job.loadLevel().toString().toLowerCase(Locale.ROOT),
                 job.tag() != null ? job.tag() : "-",
                 formatTimestamp(job.createdAt()),
-                job.exitCode() != null ? job.exitCode().toString() : "-"
+                job.exitCode() != null ? job.exitCode().toString() : "-",
+                job.retryCount() > 0 ? String.valueOf(job.retryCount()) : "-",
+                job.retryAt() != null ? formatTimestamp(job.retryAt()) : "-"
             ));
         }
 
