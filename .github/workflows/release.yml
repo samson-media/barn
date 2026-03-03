@@ -128,11 +128,20 @@ jobs:
           echo "linux_arm64_sha=$(grep barn-linux-arm64 SHA256SUMS | awk '{print $1}')" >> $GITHUB_OUTPUT
           echo "linux_x64_sha=$(grep barn-linux-x64 SHA256SUMS | awk '{print $1}')" >> $GITHUB_OUTPUT
 
+      - name: Generate Homebrew tap token
+        uses: actions/create-github-app-token@v2
+        id: homebrew-token
+        with:
+          app-id: ${{ vars.HOMEBREW_APP_ID }}
+          private-key: ${{ secrets.HOMEBREW_APP_PRIVATE_KEY }}
+          owner: samson-media
+          repositories: homebrew-tap
+
       - name: Checkout homebrew tap
         uses: actions/checkout@v4
         with:
           repository: samson-media/homebrew-tap
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          token: ${{ steps.homebrew-token.outputs.token }}
           path: homebrew-tap
 
       - name: Update Homebrew formula
